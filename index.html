@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KINE — Run The Streets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Raleway:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=20260910g">
+</head>
+<body>
+
+<!-- CHROME SCRIM — véu fixo que viaja com o chrome (não com a mídia) -->
+<div class="chrome-scrim" id="chromeScrim" aria-hidden="true"></div>
+
+<!-- CUSTOM CURSOR — círculo + seta sobre imagens de produto (desktop, ver script.js) -->
+<div class="custom-cursor" id="customCursor" aria-hidden="true">
+  <span class="custom-cursor__inner">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+      <path d="M7 17L17 7M17 7H9M17 7V15" stroke="#000000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</div>
+
+<!-- ANNOUNCEMENT BAR -->
+<div class="announce-bar">
+  <button class="announce-arrow" id="announcePrev" aria-label="Anterior">&#8249;</button>
+  <div class="announce-track" id="announceTrack">
+    <span class="announce-msg">FRETE GRÁTIS PARA TODO O BRASIL ACIMA DE R$300</span>
+    <span class="announce-msg">NOVA COLEÇÃO ASPHALT DISPONÍVEL AGORA</span>
+    <span class="announce-msg">TROCA GRÁTIS EM ATÉ 30 DIAS</span>
+  </div>
+  <button class="announce-arrow" id="announceNext" aria-label="Próximo">&#8250;</button>
+</div>
+
+<!-- HEADER -->
+<header class="site-header" id="siteHeader">
+  <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <nav class="main-nav" id="mainNav">
+    <a href="#colecao">COLEÇÃO</a>
+    <a href="#performance">PERFORMANCE</a>
+    <a href="#street">STREETWEAR</a>
+    <a href="#manada">A MANADA</a>
+  </nav>
+
+  <a href="#top" class="logo">KINE</a>
+
+  <div class="header-actions">
+    <button class="icon-btn" id="searchToggle" aria-label="Buscar">
+      <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><line x1="21" y1="21" x2="16.6" y2="16.6" stroke="currentColor" stroke-width="2"/></svg>
+    </button>
+    <button class="icon-btn" id="cartToggle" aria-label="Carrinho">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path d="M6 8h12l-1.5 11h-9L6 8z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      <span class="cart-count">0</span>
+    </button>
+  </div>
+
+  <div class="search-panel" id="searchPanel">
+    <div class="search-panel__row">
+      <input type="text" id="searchInput" placeholder="Buscar produtos, coleções..." aria-label="Campo de busca">
+      <button id="searchClose" aria-label="Fechar busca">&times;</button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+</header>
+
+<!-- CART DRAWER -->
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<aside class="cart-drawer" id="cartDrawer" aria-label="Carrinho de compras" role="dialog" aria-modal="true">
+  <div class="cart-drawer__header">
+    <h3>Carrinho <span id="cartDrawerCount">(0 itens)</span></h3>
+    <button class="icon-btn" id="cartDrawerClose" aria-label="Fechar carrinho">&times;</button>
+  </div>
+  <div class="cart-drawer__body" id="cartDrawerBody">
+    <p class="cart-drawer__empty">Seu carrinho está vazio.</p>
+    <div class="cart-drawer__quicklinks">
+      <a href="#colecao" class="pill-link">COLEÇÃO ASPHALT</a>
+      <a href="#street" class="pill-link">STREETWEAR RUNNER</a>
+      <a href="#manada" class="pill-link">A MANADA</a>
+    </div>
+  </div>
+</aside>
+
+<!-- PRODUCT QUICK VIEW -->
+<div class="product-backdrop" id="productBackdrop"></div>
+<div class="product-view" id="productView" aria-label="Detalhes do produto" role="dialog" aria-modal="true">
+  <button class="icon-btn product-view__close" id="productViewClose" aria-label="Fechar">&times;</button>
+  <div class="product-view__media" id="productViewMedia">
+    <img id="productViewImage" src="" alt="">
+    <span class="tag tag--sold product-view__soldout" id="productViewSoldout" hidden>ESGOTADO</span>
+    <button type="button" class="gallery-nav gallery-nav--prev" id="galleryPrev" aria-label="Foto anterior" hidden>&#8249;</button>
+    <button type="button" class="gallery-nav gallery-nav--next" id="galleryNext" aria-label="Próxima foto" hidden>&#8250;</button>
+    <div class="gallery-dots" id="galleryDots"></div>
+  </div>
+  <div class="product-view__info">
+    <h2 id="productViewName"></h2>
+    <p class="product-view__price" id="productViewPrice"></p>
+
+    <div class="product-view__sizes" id="productViewColors">
+      <span class="product-view__label">Cor</span>
+      <div class="size-options" id="colorOptions"></div>
+    </div>
+
+    <div class="product-view__sizes" id="productViewSizes">
+      <span class="product-view__label">Tamanho</span>
+      <div class="size-options" id="sizeOptions">
+        <button type="button" class="size-btn" data-size="P">P</button>
+        <button type="button" class="size-btn is-selected" data-size="M">M</button>
+        <button type="button" class="size-btn" data-size="G">G</button>
+        <button type="button" class="size-btn" data-size="GG">GG</button>
+      </div>
+    </div>
+
+    <button class="btn btn--solid product-view__add" id="productViewAdd">ADICIONAR AO CARRINHO</button>
+    <p class="product-view__added" id="productViewAdded" hidden>Adicionado ao carrinho ✓</p>
+  </div>
+</div>
+
+<!-- CHECKOUT -->
+<div class="checkout-backdrop" id="checkoutBackdrop"></div>
+<div class="checkout-view" id="checkoutView" aria-label="Finalizar compra" role="dialog" aria-modal="true">
+  <div class="checkout-view__header">
+    <h2>FINALIZAR COMPRA</h2>
+    <button class="icon-btn" id="checkoutClose" aria-label="Fechar">&times;</button>
+  </div>
+  <div class="checkout-view__body">
+    <div class="checkout-summary">
+      <h3>Resumo do pedido</h3>
+      <div class="checkout-items" id="checkoutItems"></div>
+      <div class="checkout-total"><span>Total</span><strong id="checkoutTotal">R$ 0,00</strong></div>
+    </div>
+    <form class="checkout-form" id="checkoutForm">
+      <h3>Dados de entrega</h3>
+      <label>Nome completo
+        <input type="text" name="nome" required>
+      </label>
+      <label>Endereço
+        <input type="text" name="endereco" required>
+      </label>
+      <div class="checkout-form__row">
+        <label>Cidade
+          <input type="text" name="cidade" required>
+        </label>
+        <label>CEP
+          <input type="text" name="cep" required>
+        </label>
+      </div>
+
+      <h3 class="checkout-form__section">Forma de pagamento</h3>
+      <div class="payment-tabs" id="paymentTabs" role="tablist">
+        <button type="button" class="payment-tab is-active" data-method="cartao" role="tab" aria-selected="true">Cartão de crédito</button>
+        <button type="button" class="payment-tab" data-method="pix" role="tab" aria-selected="false">PIX</button>
+        <button type="button" class="payment-tab" data-method="boleto" role="tab" aria-selected="false">Boleto</button>
+      </div>
+
+      <div class="payment-panel" data-method-panel="cartao">
+        <label>Número do cartão
+          <input type="text" name="cardNumber" id="cardNumber" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" maxlength="19" required>
+        </label>
+        <label>Nome impresso no cartão
+          <input type="text" name="cardName" autocomplete="cc-name" placeholder="Como está no cartão" required>
+        </label>
+        <div class="checkout-form__row">
+          <label>Validade
+            <input type="text" name="cardExpiry" id="cardExpiry" autocomplete="cc-exp" placeholder="MM/AA" maxlength="5" required>
+          </label>
+          <label>CVV
+            <input type="text" name="cardCvv" inputmode="numeric" autocomplete="cc-csc" placeholder="000" maxlength="4" required>
+          </label>
+        </div>
+        <label>Parcelas
+          <select name="installments" id="installmentsSelect"></select>
+        </label>
+      </div>
+
+      <div class="payment-panel" data-method-panel="pix" hidden>
+        <div class="pix-box">
+          <div class="pix-qr" aria-hidden="true"></div>
+          <p>Escaneie o QR Code no app do seu banco ou copie o código PIX abaixo.</p>
+          <div class="pix-code-row">
+            <input type="text" id="pixCode" readonly value="00020126580014BR.GOV.BCB.PIX0136kine-teste-5b2c-4e91-9f0a-0000000000005204000053039865400">
+            <button type="button" id="pixCopyBtn">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="payment-panel" data-method-panel="boleto" hidden>
+        <div class="boleto-box">
+          <div class="boleto-barcode" aria-hidden="true"></div>
+          <p>O boleto vence em 3 dias úteis após a confirmação do pedido.</p>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn--solid">CONFIRMAR PEDIDO (TESTE)</button>
+      <p class="checkout-form__note">Site de teste — nenhum pagamento real será processado.</p>
+    </form>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="hero-media">
+    <img class="hero-photo" src="assets/hero-corredor.jpg" alt="Corredor em trilha na floresta, sob chuva">
+    <div class="hero-overlay"></div>
+  </div>
+  <div class="hero-content">
+    <h1 class="hero-title">Run the streets</h1>
+  </div>
+  <div class="hero-scroll">SCROLL <span>↓</span></div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee">
+  <div class="marquee-track">
+    <span>SEM ATALHO</span><span>•</span><span>SÓ RITMO</span><span>•</span>
+    <span>SEM ATALHO</span><span>•</span><span>SÓ RITMO</span><span>•</span>
+    <span>SEM ATALHO</span><span>•</span><span>SÓ RITMO</span><span>•</span>
+    <span>SEM ATALHO</span><span>•</span><span>SÓ RITMO</span><span>•</span>
+  </div>
+</div>
+
+<!-- COLEÇÃO ASPHALT (own section, above the hero, no overlap) -->
+<section class="collection" id="colecao">
+  <div class="section-head">
+    <h2>COLEÇÃO ASPHALT</h2>
+    <p>Estampas geradas por dados de batimento cardíaco em corridas reais de rua.</p>
+  </div>
+
+  <div class="product-grid">
+
+    <div class="product-col product-col--left">
+      <article class="product-card" data-id="camiseta-dryfit" data-price="99.9" data-colors='[{"color":"Branco","images":["assets/products/camiseta-dryfit-branco-1.jpg"]},{"color":"Preto","images":["assets/products/camiseta-dryfit-preto-1.jpg"]}]' tabindex="0" role="button">
+        <div class="product-media">
+          <img class="product-photo" src="assets/products/camiseta-dryfit-branco-1.jpg" alt="Camiseta dryfit branca">
+        </div>
+        <h3>Camiseta dryfit</h3>
+        <p class="price">R$ 99,90</p>
+      </article>
+
+      <article class="product-card" data-id="shorts-esporte" data-price="179.9" data-colors='[{"color":"Preto com Laranja","images":["assets/products/shorts-esporte-preto-laranja-1.jpg","assets/products/shorts-esporte-preto-laranja-2.jpg"]}]' tabindex="0" role="button">
+        <div class="product-media">
+          <img class="product-photo" src="assets/products/shorts-esporte-preto-laranja-1.jpg" alt="Shorts esporte preto com laranja">
+        </div>
+        <h3>Shorts esporte</h3>
+        <p class="price">R$ 179,90</p>
+      </article>
+    </div>
+
+    <div class="product-col product-col--right">
+      <article class="product-card" data-id="cropped" data-price="129.9" data-colors='[{"color":"Branco","images":["assets/products/cropped-branco-1.jpg"]},{"color":"Preto","images":["assets/products/cropped-preto-1.jpg"]}]' tabindex="0" role="button">
+        <div class="product-media">
+          <img class="product-photo" src="assets/products/cropped-branco-1.jpg" alt="Cropped branco">
+        </div>
+        <h3>Cropped</h3>
+        <p class="price">R$ 129,90</p>
+      </article>
+
+      <article class="product-card" data-id="bone-running" data-price="199.9" data-colors='[{"color":"Preto","images":["assets/products/bone-running-preto-1.jpg"]},{"color":"Verde","images":["assets/products/bone-running-verde-1.jpg"]}]' tabindex="0" role="button">
+        <div class="product-media">
+          <img class="product-photo" src="assets/products/bone-running-preto-1.jpg" alt="Boné RUNNING preto">
+        </div>
+        <h3>Boné RUNNING</h3>
+        <p class="price">R$ 199,90</p>
+      </article>
+    </div>
+
+  </div>
+</section>
+
+<!-- OUTDOOR HERO (full-bleed looping video, own section, in normal flow) -->
+<section class="outdoor-hero" id="performance">
+  <div class="outdoor-hero-media">
+    <video
+      class="outdoor-hero-video"
+      id="outdoorHeroVideo"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      poster="assets/outdoor-manifesto-poster.jpg"
+    >
+      <source src="assets/outdoor-manifesto.mp4" type="video/mp4">
+    </video>
+    <div class="outdoor-hero-mask" id="outdoorHeroMask" aria-hidden="true" hidden></div>
+  </div>
+  <div class="outdoor-hero-overlay"></div>
+  <div class="outdoor-hero-content">
+    <span class="editorial-kicker">MANIFESTO</span>
+    <h2>A cidade é a pista.<br>O relógio é o juiz.</h2>
+  </div>
+</section>
+
+<!-- PERFORMANCE STRIP -->
+<section class="stats-strip">
+  <div class="stat"><strong>10K+</strong><span>corredores na rua</span></div>
+  <div class="stat"><strong>42KM</strong><span>testado em maratona</span></div>
+  <div class="stat"><strong>0</strong><span>login necessário</span></div>
+  <div class="stat"><strong>24/7</strong><span>disponível pra treino</span></div>
+</section>
+
+<!-- STREETWEAR / ALAISE-INSPIRED + A MANADA (shared atmospheric backdrop) -->
+<div class="street-scene">
+  <div class="section-media">
+    <img class="section-photo" src="assets/floresta.jpg" alt="Estrada molhada cortando uma floresta escura sob tempestade">
+  </div>
+
+<section class="collection collection--alt" id="street">
+  <div class="section-head">
+    <h2>STREETWEAR RUNNER</h2>
+    <p>Peças do treino direto pro role. Sem trocar de roupa, sem desculpa.</p>
+  </div>
+
+  <div class="product-grid product-grid--wide">
+
+    <div class="product-col product-col--left">
+      <article class="product-card" data-id="regata-machao" data-price="150.9" data-colors='[{"color":"Branca","images":["assets/products/regata-machao-branca-1.jpg","assets/products/regata-machao-branca-2.jpg"]},{"color":"Preto","images":["assets/products/regata-machao-preto-1.jpg"]}]' tabindex="0" role="button">
+        <div class="product-media">
+          <img class="product-photo" src="assets/products/regata-machao-branca-1.jpg" alt="Regata machão branca">
+        </div>
+        <h3>Regata machão</h3>
+        <p class="price">R$ 150,90</p>
+      </article>
+
+      <article class="product-card" data-id="shorts-elastano" data-price="179.9" data-colors='[{"color":"Preto","images":["assets/products/shorts-elastano-preto-1.jpg"]},{"color":"Branco","images":["assets/products/shorts-elastano-branco-1.jpg"]}]' tabindex="0" role="button">
+        <div class="product-media">
+          <img class="product-photo" src="assets/products/shorts-elastano-preto-1.jpg" alt="Shorts elastano preto">
+        </div>
+        <h3>Shorts elastano</h3>
+        <p class="price">R$ 179,90</p>
+      </article>
+    </div>
+
+    <div class="product-col product-col--right">
+      <article class="product-card" data-id="corta-vento" data-price="149.9" data-colors='[{"color":"Branco","images":["assets/products/corta-vento-branco-1.jpg"]},{"color":"Preto","images":["assets/products/corta-vento-preto-1.jpg"]}]' tabindex="0" role="button">
+        <div class="product-media">
+          <img class="product-photo" src="assets/products/corta-vento-branco-1.jpg" alt="Corta vento branco">
+        </div>
+        <h3>Corta vento</h3>
+        <p class="price">R$ 149,90</p>
+      </article>
+
+      <article class="product-card" data-id="camiseta-over" data-price="99.9" data-colors='[{"color":"Branco","images":["assets/products/camiseta-over-branco-1.jpg"]},{"color":"Preto","images":["assets/products/camiseta-over-preto-1.jpg"]}]' tabindex="0" role="button">
+        <div class="product-media">
+          <img class="product-photo" src="assets/products/camiseta-over-branco-1.jpg" alt="Camiseta over branca">
+        </div>
+        <h3>Camiseta over</h3>
+        <p class="price">R$ 99,90</p>
+      </article>
+    </div>
+
+  </div>
+
+  <div class="promo-banner">
+    <p>ASSINE A NEWSLETTER E GANHE 15% OFF — APLICADO AUTOMATICAMENTE NO CHECKOUT</p>
+  </div>
+</section>
+
+<!-- A MANADA / COMMUNITY -->
+<section class="pack" id="manada">
+  <h2>A MANADA CORRE JUNTA</h2>
+  <p>Sem app. Sem login. Só ponto de encontro e ritmo — toda terça, 6h, praça central.</p>
+  <a href="#top" class="btn">ENTRAR NA LISTA (SEM CADASTRO)</a>
+</section>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-top">
+    <a href="#top" class="logo logo--footer">KINE</a>
+    <form class="newsletter" onsubmit="return false;">
+      <input type="email" placeholder="seu@email.com" aria-label="E-mail para newsletter">
+      <button type="submit">ENVIAR</button>
+    </form>
+  </div>
+  <div class="footer-links">
+    <div>
+      <h4>LOJA</h4>
+      <a href="#colecao">Coleção Asphalt</a>
+      <a href="#street">Streetwear Runner</a>
+    </div>
+    <div>
+      <h4>MARCA</h4>
+      <a href="#performance">Manifesto</a>
+      <a href="#manada">A Manada</a>
+    </div>
+    <div>
+      <h4>INFO</h4>
+      <a href="#">Trocas e devoluções</a>
+      <a href="#">Guia de tamanhos</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 KINE — Site de teste, sem sistema de login ou pagamento real.</span>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/script.js?v=20260910c"></script>
+<script src="js/cinematic.js?v=20260903c"></script>
+</body>
+</html>

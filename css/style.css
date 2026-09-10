@@ -1,0 +1,1954 @@
+/* ========================================================
+   KINE — Editorial monochrome system
+   PEÇA A: tokens, tipografia global, tema base (canvas claro)
+   e chrome (announce bar, header/nav, footer, botões/links).
+   Seções de conteúdo (hero, manifesto, produtos, stats, pack)
+   e overlays (busca, carrinho, quick view, checkout) mantêm
+   sua ESTRUTURA — aqui só recebem os tokens do sistema.
+   ======================================================== */
+
+:root {
+  /* ---------- Cor — monocromática absoluta (R=G=B em toda a UI) ---------- */
+  --color-obsidian:   #000000;
+  --color-paper:      #ffffff;
+  --color-inkstone:   #181818;
+  --color-felt-gray:  #6d6d6d;
+  --color-slate-pill: #636363;
+  --color-ash-mist:   #9a9a9a;
+  --color-pewter:     #808080;
+
+  /* Único gesto cromático do sistema. Reservado a wash de MÍDIA — jamais UI. */
+  --gradient-iridescent-fade:
+    linear-gradient(90deg, rgb(160,224,171), rgb(255,172,46) 50%, rgb(165,45,37));
+
+  /* ---------- Aliases semânticos ----------
+     Os nomes legados (--bg, --ink, --line...) continuam existindo de propósito:
+     o resto da folha os consome, então remapeá-los troca o tema inteiro de uma vez
+     sem quebrar seletor nenhum. Não existe mais --accent nem --danger: o sistema
+     não tem cor cromática. */
+  --bg:         var(--color-paper);
+  --bg-alt:     var(--color-paper);
+  --bg-invert:  var(--color-obsidian);
+  --ink:        var(--color-obsidian);
+  --ink-2:      var(--color-inkstone);
+  --ink-dim:    var(--color-felt-gray);
+  --ink-mute:   var(--color-ash-mist);
+  --on-dark:    var(--color-paper);
+  --on-dark-dim: rgba(255,255,255,0.66);
+  /* Segunda camada de tinta do chrome invertido. Na referência só a wordmark
+     ancora em branco cheio; nav, ícones, badge e barra de anúncio dissolvem
+     dentro da imagem a ~47%. É o que separa "repousar sobre" de "viver dentro". */
+  --on-dark-soft: rgba(255,255,255,0.47);
+  --line:       var(--color-obsidian);       /* hairline estrutural (superfície clara) */
+  --line-soft:  rgba(0,0,0,0.18);            /* separador silencioso — ainda R=G=B */
+  --line-dark:  rgba(255,255,255,0.3);       /* hairline sobre superfície escura */
+  /* ÚNICO fill sólido autorizado (Filled Neutral Pill). Todo elemento que não
+     seja Ghost (transparente + borda 1px) usa exatamente este par — inclusive
+     os backdrops de overlay, que antes tinham um segundo fill próprio. */
+  --fill-neutral:        rgba(55,55,55,0.78);
+  --fill-neutral-border: #ffffff;
+  --scrim:      var(--fill-neutral);         /* backdrop de overlay — o mesmo fill único */
+
+  /* ---------- Tipografia ----------
+     Roobert é a primária da referência; Inter é o substituto oficial indicado
+     no próprio sistema de design. Raleway entra só como contraponto de heading. */
+  --font-roobert:   "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-raleway:   "Raleway", "Inter", sans-serif;
+  --font-system-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* nomes legados apontam para a primária — Anton e Space Grotesk saíram do sistema */
+  --font-display: var(--font-roobert);
+  --font-body:    var(--font-roobert);
+
+  --weight-light:   300;
+  --weight-regular: 400;
+  --weight-semi:    600;   /* nunca acima de 45px */
+
+  --text-micro:         11px;   /* bloco de endereço/legal do rodapé */
+  --text-caption:       12px;
+  --text-body-sm:       16px;
+  --text-body:          18px;
+  --text-subheading:    39px;
+  --text-subheading-lg: 45px;
+  --text-heading-sm:    54px;
+  --text-heading:       78px;
+  --text-heading-lg:    94px;
+  --text-display:       225px;
+
+  --lh-micro:         1.36;
+  --lh-caption:       1.19;
+  --lh-body-sm:       1.15;
+  --lh-body:          1.58;   /* corpo generoso */
+  --lh-subheading:    1.19;
+  --lh-subheading-lg: 1.15;
+  --lh-heading-sm:    1.39;
+  /* Acima de 78px as linhas travam entre 0.70 e 0.80: o bloco tipográfico
+     precisa ler como objeto, não como parágrafo. */
+  --lh-heading:       0.78;
+  --lh-heading-lg:    0.76;
+  --lh-display:       0.76;
+
+  /* ---------- Espaçamento e forma (unidade base 4px) ---------- */
+  --space-1: 8px;
+  --space-2: 12px;
+  --space-3: 28px;
+  --space-4: 40px;
+  --space-5: 48px;
+  --space-6: 64px;
+  --space-7: 68px;
+  --space-8: 152px;
+
+  --page-max-width: 1078px;
+  /* Goteira única da página: todo bloco de conteúdo usa a MESMA medida e a
+     MESMA goteira, então todas as margens esquerdas coincidem no mesmo x. */
+  --gutter:         28px;
+  --section-gap:    46px;
+  --card-padding:   34px;
+  --element-gap:    14px;
+
+  /* O raio salta de 0 para pill. Nada vive entre 1px e 74px. */
+  --radius-flat: 0px;
+  --radius-pill: 75px;
+
+  /* ---------- Movimento ---------- */
+  --ease-signature: cubic-bezier(0.19, 1, 0.22, 1);
+  --dur-micro: 0.4s;    /* micro-transições de cor/opacidade */
+  --dur-base:  0.8s;    /* transform e cor */
+  --dur-slow:  1.25s;   /* reveals longos */
+
+  --header-h: 66px;
+  --announce-h: 36px;
+  /* Altura REAL do conjunto fixo (announce-bar + header) e o deslocamento que
+     o recolhimento precisa percorrer. Os dois são reescritos em px por
+     script.js a partir de offsetHeight medido, então nenhum valor aqui fica
+     desatualizado quando a tipografia muda a altura renderizada. O fallback
+     abaixo já é a soma dos tokens — nunca um número solto. */
+  --chrome-h: calc(var(--announce-h) + var(--header-h));
+  --chrome-offset: calc(var(--announce-h) + var(--header-h) + 4px);
+
+  /* Ruído procedural de tecido (turbulência SVG) — grayscale, gerado, não é foto */
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.9' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+/* O chrome é fixed: âncoras precisam parar abaixo dele, não sob ele. */
+section[id], div[id] { scroll-margin-top: calc(var(--announce-h) + var(--header-h)); }
+#top { scroll-margin-top: 0; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-roobert);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  font-weight: var(--weight-regular);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+img, svg { display: block; max-width: 100%; }
+
+/* Link de texto: sem sublinhado, raio 0, sem fundo. */
+a {
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-flat);
+  transition: opacity var(--dur-micro) ease, color var(--dur-micro) ease;
+}
+
+/* Controles de formulário não herdam fonte por padrão no UA — forçamos a primária
+   e o degrau base da escala (o default do UA é 13.333px, fora do sistema). */
+button, input, select, textarea {
+  font-family: inherit;
+  font-weight: inherit;
+  font-size: var(--text-body-sm);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-roobert);
+  font-weight: var(--weight-regular);
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  text-transform: none;
+  margin: 0;
+}
+
+::selection { background: var(--fill-neutral); color: var(--color-paper); }
+
+::placeholder { color: var(--ink-mute); opacity: 1; }
+
+/* ---------- Announcement bar ---------- */
+.announce-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 101;
+  height: var(--announce-h);
+  background: var(--color-paper);
+  color: var(--color-obsidian);
+  border-bottom: 1px solid var(--line);
+  transition: transform var(--dur-base) var(--ease-signature);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-roobert);
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.06em;
+  overflow: hidden;
+}
+
+.announce-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.announce-msg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--dur-micro) ease,
+              transform var(--dur-base) var(--ease-signature);
+  pointer-events: none;
+  padding: 0 var(--space-4);
+  text-align: center;
+}
+
+.announce-msg.is-active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.announce-arrow {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 32px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-flat);
+  /* O tom mudo da seta mora na ALFA DA COR, não em `opacity`. Com opacity a
+     troca de estado (claro ↔ invertido) interpolava 0.55→1 em 0.4s e, somada à
+     alfa 0.47 da tinta invertida, derrubava a seta a 2.09:1 contra a base
+     escura da foto durante o fade. Cor não tem transição declarada aqui — a
+     troca de estado é instantânea, pela mesma razão documentada em
+     .site-header — e `opacity` fica livre para animar só o hover. */
+  color: rgba(0, 0, 0, 0.55);
+  font-family: var(--font-roobert);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-regular);
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 1;
+  transition: opacity var(--dur-micro) ease;
+}
+/* Mesmo idioma de hover do resto do chrome (nav/ícones/wordmark): a tinta
+   recua. 0.8 é o degrau que ainda passa em 3:1 nos DOIS estados. */
+.announce-arrow:hover { opacity: 0.8; }
+.announce-arrow:first-of-type { left: var(--space-1); }
+.announce-arrow:last-of-type { right: var(--space-1); }
+
+/* Dissolvida na mídia: mesma lógica do header, alternada por script.js.
+   A troca é instantânea de propósito — um cross-fade passaria por um cinza
+   médio sem contraste contra nenhum dos dois fundos. */
+.announce-bar--inverse {
+  background: transparent;
+  border-bottom-color: transparent;
+  /* Camada dissolvida: a barra de anúncio inteira vive DENTRO da imagem. */
+  color: var(--on-dark-soft);
+}
+.announce-bar--inverse .announce-arrow {
+  color: var(--on-dark-soft);   /* só a cor troca — a opacidade fica em 1 nos dois estados */
+}
+/* Recolhimento: nunca um valor hardcoded. Percorre a altura REAL do conjunto
+   fixo (announce-bar + header), medida por script.js. A announce-bar mora em
+   top:0 e o header em top:var(--announce-h): usar o mesmo deslocamento total
+   nos dois garante que NENHUM dos dois sobre um pixel, seja qual for a altura
+   renderizada em qualquer largura. */
+.announce-bar--hidden { transform: translateY(calc(-1 * var(--chrome-offset))); }
+
+/* ---------- Scrim fixo do chrome ----------
+   O véu que dá contraste à tinta clara viaja COM o chrome, não com a mídia:
+   é position:fixed, cobre só a faixa de altura do conjunto announce+header e
+   liga apenas no estado invertido. Assim o contraste é o mesmo em qualquer
+   ponto de rolagem dentro de uma faixa de mídia escura — o gradiente da seção
+   pode decair à vontade que o chrome continua protegido. */
+.chrome-scrim {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: calc(var(--chrome-h) + 78px);
+  z-index: 99;
+  pointer-events: none;
+  opacity: 0;
+  /* Forte sob a faixa de tinta (0–57% da altura do véu ≈ a base do header) e
+     com cauda longa depois, para ler como vinheta de topo e não como tarja.
+     O platô subiu de 0.72 para 0.82 na rodada 5: medido contra o pixel MAIS
+     CLARO do vídeo do manifesto ao longo de 18 quadros que cobrem o loop
+     inteiro (5,04s), 0.72 entregava 3,53:1 na tinta dissolvida a 47% — acima
+     do mínimo, mas com só 18% de folga. 0.82 leva o mesmo pior caso para a
+     casa de 4,3–4,6:1. */
+  background: linear-gradient(180deg,
+    rgba(0,0,0,0.82) 0%,
+    rgba(0,0,0,0.80) 50%,
+    rgba(0,0,0,0.70) 60%,
+    rgba(0,0,0,0.32) 80%,
+    rgba(0,0,0,0) 100%);
+  transition: opacity var(--dur-micro) ease,
+              transform var(--dur-base) var(--ease-signature);
+}
+.chrome-scrim.is-active { opacity: 1; }
+.chrome-scrim.is-hidden { transform: translateY(calc(-1 * var(--chrome-offset) - 78px)); }
+
+/* ---------- Custom cursor ----------
+   Um único elemento fixo, posicionado por script.js via requestAnimationFrame
+   (translate, sem transition — segue o mouse sem atraso). Só a escala do
+   círculo interno anima, na curva-assinatura, então ele cresce/encolhe ao
+   entrar/sair em vez de aparecer/sumir seco. 100px com radius-pill (75px)
+   clampa pra círculo perfeito — não é um raio novo, é o mesmo token de
+   sempre aplicado a uma caixa pequena o bastante pra virar círculo. */
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  pointer-events: none;
+  will-change: transform;
+}
+.custom-cursor__inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100px;
+  height: 100px;
+  margin: -50px 0 0 -50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-paper);
+  border-radius: var(--radius-pill);
+  transform: scale(0);
+  transition: transform var(--dur-base) var(--ease-signature);
+}
+.custom-cursor.is-active .custom-cursor__inner { transform: scale(1); }
+
+@media (hover: hover) and (pointer: fine) {
+  .product-photo,
+  #productViewImage {
+    cursor: none;
+  }
+}
+
+/* ---------- Header ----------
+   Barra de 66px: wordmark à esquerda, menu à direita.
+   Duas superfícies possíveis, alternadas por script.js (syncHeaderSurface):
+   sobre canvas de papel ele tem superfície própria (papel + hairline);
+   sobre faixa escura de MÍDIA ele dissolve (transparente + tinta clara).
+   Assim nav e wordmark ficam legíveis em qualquer posição de scroll. */
+.site-header {
+  position: fixed;
+  top: var(--announce-h);
+  left: 0; right: 0;
+  z-index: 100;
+  height: var(--header-h);
+  background: var(--color-paper);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--gutter);
+  /* Só o transform anima. Cor/fundo trocam de estado sem cross-fade: qualquer
+     quadro intermediário seria cinza médio, sem contraste contra os dois lados. */
+  transition: transform var(--dur-base) var(--ease-signature);
+}
+
+/* Mesmo deslocamento total da announce-bar: o header mora em top:36px, então
+   translateY(-100%) só cobria os 66px dele e deixava 36px de tinta na tela. */
+.site-header.header--hidden { transform: translateY(calc(-1 * var(--chrome-offset))); }
+
+.site-header--inverse {
+  background: transparent;
+  border-bottom-color: transparent;
+}
+/* Duas camadas de opacidade: só a wordmark ancora em branco cheio. */
+.site-header--inverse .logo { color: var(--on-dark); }
+.site-header--inverse .main-nav a,
+.site-header--inverse .icon-btn { color: var(--on-dark-soft); }
+.site-header--inverse .nav-toggle span { background: var(--on-dark-soft); }
+/* O badge mantém o fill único autorizado — dissolve como elemento, não trocando
+   de cor: assim o Filled Neutral Pill continua sendo exatamente o mesmo token. */
+.site-header--inverse .cart-count { opacity: 0.47; }
+/* Menu mobile aberto = painel de papel: a nav volta à tinta cheia sobre ele. */
+.site-header--inverse .main-nav.is-open a { color: var(--ink); }
+
+.logo {
+  order: 1;
+  margin-right: auto;
+  font-family: var(--font-roobert);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-regular);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  transition: opacity var(--dur-micro) ease;  /* cor troca sem fade — ver .site-header */
+}
+.logo:hover { opacity: 0.55; }
+
+.main-nav {
+  order: 2;
+  display: flex;
+  gap: var(--space-3);
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.04em;
+}
+
+.main-nav a {
+  position: relative;
+  padding: 4px 0;
+  color: var(--ink);
+  border-radius: var(--radius-flat);
+  transition: opacity var(--dur-micro) ease;
+}
+.main-nav a:hover { opacity: 0.45; }
+
+.header-actions {
+  order: 3;
+  display: flex;
+  gap: var(--element-gap);
+  align-items: center;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  border-radius: var(--radius-flat);
+  color: var(--ink);
+  font-size: var(--text-body-sm);
+  line-height: 1;
+  cursor: pointer;
+  position: relative;
+  padding: 6px;
+  display: flex;
+  transition: opacity var(--dur-micro) ease;
+}
+.icon-btn:hover { opacity: 0.45; }
+
+/* Filled Neutral Pill — o único fill sólido do sistema. */
+.cart-count {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: var(--fill-neutral);
+  border: 1px solid var(--color-paper);
+  color: var(--color-paper);
+  font-size: var(--text-caption);
+  line-height: 1;
+  font-family: var(--font-roobert);
+  font-weight: var(--weight-regular);
+  border-radius: var(--radius-pill);
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.nav-toggle {
+  order: 4;
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-flat);
+  cursor: pointer;
+  padding: 8px;
+}
+.nav-toggle span {
+  width: 22px; height: 1px;
+  background: var(--ink);
+  transition: transform var(--dur-base) var(--ease-signature),
+              opacity var(--dur-micro) ease;
+}
+
+/* Search panel (chrome do header — a Peça C cuida do comportamento)
+   ANCORADO NO PRÓPRIO HEADER, não no viewport. Enquanto o header tem transform
+   (os 0.8s do deslize de recolher/mostrar), ele vira o bloco de contenção de
+   qualquer descendente `fixed` — e um painel com `top:102px; left:0; right:0`
+   passava a medir a partir da caixa de padding do header, aparecendo 36px baixo
+   demais e saltando de volta no fim da transição. Medido em `position:absolute`
+   a geometria é a MESMA nos dois casos (top:100% = base do header; as goteiras
+   negativas devolvem a largura total), e o painel acompanha o deslize em vez de
+   saltar. */
+.search-panel {
+  position: absolute;
+  /* +1px: a caixa de padding do header não inclui a hairline inferior dele, e
+     o painel precisa começar DEPOIS dela, como antes. */
+  top: calc(100% + 1px);
+  left: 0; right: 0;
+  background: var(--bg-alt);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--radius-flat);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-12px);
+  transition: opacity var(--dur-micro) ease,
+              transform var(--dur-base) var(--ease-signature),
+              visibility 0s linear var(--dur-base);
+  z-index: 90;
+  max-height: 72vh;
+}
+.search-panel.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition: opacity var(--dur-micro) ease,
+              transform var(--dur-base) var(--ease-signature);
+}
+.search-panel__row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.search-panel input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: var(--radius-flat);
+  color: var(--ink);
+  font-family: var(--font-roobert);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-regular);
+  padding: var(--space-1) 4px;
+  outline: none;
+  transition: border-color var(--dur-micro) ease;
+}
+.search-panel input:focus { border-color: var(--line); }
+.search-panel button {
+  background: none;
+  border: none;
+  border-radius: var(--radius-flat);
+  color: var(--ink);
+  font-size: var(--text-body);
+  cursor: pointer;
+  line-height: 1;
+  transition: opacity var(--dur-micro) ease;
+}
+.search-panel button:hover { opacity: 0.45; }
+
+.search-results {
+  overflow-y: auto;
+  margin-top: 4px;
+}
+.search-results:not(:empty) { margin-top: var(--space-1); }
+.search-result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 4px;
+  border-bottom: 1px solid var(--line-soft);
+  cursor: pointer;
+  transition: opacity var(--dur-micro) ease;
+}
+.search-result-item:hover { opacity: 0.45; }
+.search-result-item .name {
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-regular);
+}
+.search-result-item .price {
+  font-size: var(--text-body-sm);
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+.search-empty {
+  color: var(--ink-dim);
+  font-size: var(--text-body-sm);
+  padding: var(--space-2) 4px;
+}
+
+/* ---------- Cart drawer ---------- */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  z-index: 105;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-micro) ease;
+}
+.drawer-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.cart-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 100%);
+  background: var(--bg-alt);
+  border-left: 1px solid var(--line);
+  border-radius: var(--radius-flat);
+  z-index: 110;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3);
+  transform: translateX(100%);
+  transition: transform var(--dur-base) var(--ease-signature);
+  overflow-y: auto;
+}
+.cart-drawer.is-open { transform: translateX(0); }
+
+.cart-drawer__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.cart-drawer__header h3 {
+  font-family: var(--font-roobert);
+  font-size: var(--text-body);
+  font-weight: var(--weight-regular);
+  letter-spacing: -0.01em;
+}
+.cart-drawer__header h3 span {
+  font-weight: var(--weight-regular);
+  font-size: var(--text-caption);
+  color: var(--ink-dim);
+  margin-left: 6px;
+  text-transform: none;
+}
+
+.cart-drawer__empty {
+  color: var(--ink-dim);
+  font-size: var(--text-body-sm);
+  margin: var(--space-4) 0 var(--space-3);
+}
+
+.cart-drawer__quicklinks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cart-drawer__items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.cart-item {
+  display: flex;
+  gap: var(--element-gap);
+  align-items: center;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: var(--space-1);
+}
+.cart-item img {
+  width: 64px;
+  height: 76px;
+  object-fit: cover;
+  border-radius: var(--radius-flat);
+  flex-shrink: 0;
+}
+.cart-item__info h4 {
+  font-family: var(--font-roobert);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-body-sm);
+  margin: 0 0 4px;
+}
+.cart-item__info p {
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  color: var(--ink-dim);
+  margin: 0;
+}
+.cart-drawer__footer {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--line);
+}
+.cart-drawer__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: var(--text-body-sm);
+  margin-bottom: var(--space-1);
+}
+.cart-drawer__total strong {
+  font-family: var(--font-roobert);
+  font-size: var(--text-body);
+  font-weight: var(--weight-regular);
+  color: var(--ink);
+}
+.cart-drawer__checkout {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.cart-item__remove {
+  background: none;
+  border: none;
+  border-radius: var(--radius-flat);
+  color: var(--ink-dim);
+  font-size: var(--text-body-sm);
+  cursor: pointer;
+  padding: 4px var(--space-1);
+  margin-left: auto;
+  align-self: flex-start;
+  transition: color var(--dur-micro) ease;
+}
+.cart-item__remove:hover { color: var(--ink); }
+
+/* ---------- Product quick view ---------- */
+.product-backdrop,
+.checkout-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  z-index: 115;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-micro) ease;
+}
+.product-backdrop.is-open,
+.checkout-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.product-view {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -48%) scale(0.985);
+  width: min(880px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--bg-alt);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-flat);
+  z-index: 120;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-micro) ease,
+              transform var(--dur-base) var(--ease-signature);
+}
+.product-view.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+.product-view__close {
+  position: absolute;
+  top: var(--space-2); right: var(--space-2);
+  z-index: 2;
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--text-body);
+  line-height: 1;
+}
+.product-view__media {
+  position: relative;
+  aspect-ratio: 3/4;
+}
+.product-view__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-flat);
+}
+.product-view__soldout {
+  position: absolute;
+  top: var(--space-1); left: var(--space-1);
+}
+
+.gallery-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--fill-neutral-border);
+  background: var(--fill-neutral);
+  color: var(--on-dark);
+  font-size: var(--text-body);
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--dur-micro) ease;
+}
+.gallery-nav:hover { opacity: 0.7; }
+.gallery-nav--prev { left: var(--element-gap); }
+.gallery-nav--next { right: var(--element-gap); }
+.gallery-nav[hidden] { display: none; }
+
+.gallery-dots {
+  position: absolute;
+  bottom: var(--space-1);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-1);
+}
+/* Ghost quando inativo, Filled Neutral Pill quando ativo — os dois únicos
+   tratamentos do sistema, sem terceiro estado. */
+.gallery-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  border: 1px solid var(--fill-neutral-border);
+  transition: background-color var(--dur-micro) ease;
+}
+.gallery-dot.is-active {
+  background: var(--fill-neutral);
+}
+.product-view__info {
+  padding: var(--card-padding);
+  display: flex;
+  flex-direction: column;
+}
+.product-view__info h2 {
+  font-family: var(--font-roobert);
+  font-size: var(--text-subheading);
+  line-height: var(--lh-subheading);
+  font-weight: var(--weight-regular);
+  text-transform: none;
+}
+.product-view__price {
+  font-size: var(--text-body);
+  color: var(--ink);
+  margin: var(--space-2) 0 6px;
+  font-weight: var(--weight-regular);
+}
+.product-view__label {
+  display: block;
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  letter-spacing: 0.06em;
+  color: var(--ink-dim);
+  margin-bottom: var(--space-2);
+  font-weight: var(--weight-regular);
+}
+.size-options {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+.size-btn {
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  font-family: var(--font-roobert);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-body-sm);
+  cursor: pointer;
+  transition: border-color var(--dur-base) var(--ease-signature),
+              background-color var(--dur-micro) ease,
+              color var(--dur-micro) ease;
+}
+.size-btn:hover { border-color: var(--line); }
+.size-btn.is-selected {
+  background: var(--fill-neutral);
+  border-color: var(--fill-neutral-border);
+  color: var(--color-paper);
+}
+.size-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+/* Seletor de cor — mesma linguagem visual do seletor de tamanho (pill, mesmos
+   tokens, mesmos estados), só com largura pelo conteúdo em vez de 44px fixos,
+   já que "Preto"/"Branca" não cabem numa caixa dimensionada pra "P"/"GG".
+   Nunca cor cromática de UI aqui — a cor do produto só aparece na foto. */
+.color-btn {
+  height: 44px;
+  padding: 0 18px;
+  background: transparent;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  font-family: var(--font-roobert);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-body-sm);
+  cursor: pointer;
+  transition: border-color var(--dur-base) var(--ease-signature),
+              background-color var(--dur-micro) ease,
+              color var(--dur-micro) ease;
+}
+.color-btn:hover { border-color: var(--line); }
+.color-btn.is-selected {
+  background: var(--fill-neutral);
+  border-color: var(--fill-neutral-border);
+  color: var(--color-paper);
+}
+.color-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.product-view__add {
+  margin-top: auto;
+}
+.product-view__add:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: transparent;
+  color: var(--ink-dim);
+  border-color: var(--line-soft);
+}
+.product-view__added {
+  color: var(--ink);
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  margin-top: var(--space-2);
+}
+
+/* ---------- Checkout ---------- */
+.checkout-view {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -48%) scale(0.985);
+  width: min(960px, 94vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg-alt);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-flat);
+  z-index: 120;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-micro) ease,
+              transform var(--dur-base) var(--ease-signature);
+}
+.checkout-view.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+.checkout-view__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: var(--bg-alt);
+  z-index: 1;
+}
+.checkout-view__header h2 {
+  font-family: var(--font-roobert);
+  font-size: var(--text-body);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.02em;
+}
+.checkout-view__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--card-padding);
+}
+.checkout-summary h3,
+.checkout-form h3 {
+  font-family: var(--font-roobert);
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  letter-spacing: 0.06em;
+  color: var(--ink-dim);
+  margin-bottom: var(--space-2);
+  font-weight: var(--weight-regular);
+}
+.checkout-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+.checkout-item {
+  display: flex;
+  gap: var(--element-gap);
+  align-items: center;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: var(--space-1);
+}
+.checkout-item img {
+  width: 56px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: var(--radius-flat);
+  flex-shrink: 0;
+}
+.checkout-item__info h4 {
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-regular);
+  margin: 0 0 4px;
+}
+.checkout-item__info p {
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  color: var(--ink-dim);
+  margin: 0;
+}
+.checkout-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--line);
+  font-size: var(--text-body-sm);
+}
+.checkout-total strong {
+  font-family: var(--font-roobert);
+  font-size: var(--text-body);
+  font-weight: var(--weight-regular);
+  color: var(--ink);
+}
+.checkout-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.checkout-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  color: var(--ink-dim);
+  letter-spacing: 0.02em;
+}
+.checkout-form input {
+  background: transparent;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-flat);
+  color: var(--ink);
+  font-family: var(--font-roobert);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-regular);
+  padding: var(--space-2) var(--element-gap);
+  outline: none;
+  transition: border-color var(--dur-micro) ease;
+}
+.checkout-form input:focus { border-color: var(--line); }
+.checkout-form select {
+  background: var(--bg-alt);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-flat);
+  color: var(--ink);
+  font-family: var(--font-roobert);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-regular);
+  padding: var(--space-2) var(--element-gap);
+  outline: none;
+  transition: border-color var(--dur-micro) ease;
+}
+.checkout-form select:focus { border-color: var(--line); }
+.checkout-form__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-1);
+}
+.checkout-form button {
+  margin-top: var(--space-1);
+}
+.checkout-form__section {
+  margin-top: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-soft);
+}
+
+/* ---------- Payment method ---------- */
+.payment-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-1);
+}
+.payment-tab {
+  background: transparent;
+  overflow-wrap: break-word;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+  color: var(--ink-dim);
+  font-family: var(--font-roobert);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.02em;
+  padding: var(--space-2) var(--space-1);
+  cursor: pointer;
+  transition: border-color var(--dur-base) var(--ease-signature),
+              color var(--dur-micro) ease,
+              background-color var(--dur-micro) ease;
+}
+.payment-tab:hover { color: var(--ink); border-color: var(--line); }
+.payment-tab.is-active {
+  background: var(--fill-neutral);
+  border-color: var(--fill-neutral-border);
+  color: var(--color-paper);
+}
+.payment-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.payment-panel[hidden] { display: none; }
+
+.pix-box {
+  padding: var(--space-3);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-flat);
+}
+.pix-box p {
+  color: var(--ink-dim);
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  margin: var(--element-gap) 0;
+}
+.pix-qr {
+  width: 140px;
+  height: 140px;
+  background:
+    repeating-conic-gradient(#000000 0% 25%, #ffffff 0% 50%) 0 0/20px 20px,
+    #ffffff;
+  border: 6px solid #ffffff;
+  outline: 1px solid var(--line-soft);
+  border-radius: var(--radius-flat);
+}
+.pix-code-row {
+  display: flex;
+  gap: var(--space-1);
+}
+.pix-code-row input {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-flat);
+  color: var(--ink-dim);
+  font-family: var(--font-roobert);
+  font-size: var(--text-caption);
+  padding: var(--space-2);
+  outline: none;
+  min-width: 0;
+}
+.pix-code-row button {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  font-family: var(--font-roobert);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.02em;
+  padding: 0 var(--space-3);
+  cursor: pointer;
+  transition: border-color var(--dur-base) var(--ease-signature),
+              letter-spacing var(--dur-base) var(--ease-signature),
+              background-color var(--dur-micro) ease,
+              color var(--dur-micro) ease;
+  white-space: nowrap;
+}
+.pix-code-row button:hover { border-color: rgba(0,0,0,0.4); letter-spacing: 0.06em; }
+.pix-code-row button.is-copied {
+  background: var(--fill-neutral);
+  border-color: var(--fill-neutral-border);
+  color: var(--color-paper);
+}
+
+.boleto-box {
+  padding: var(--space-3);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-flat);
+}
+.boleto-box p {
+  color: var(--ink-dim);
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  margin-top: var(--element-gap);
+}
+.boleto-barcode {
+  height: 56px;
+  background: repeating-linear-gradient(
+    90deg,
+    #000000 0px, #000000 2px,
+    transparent 2px, transparent 4px,
+    #000000 4px, #000000 7px,
+    transparent 7px, transparent 9px,
+    #000000 9px, #000000 12px,
+    transparent 12px, transparent 15px
+  );
+}
+.checkout-form__note {
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  color: var(--ink-dim);
+}
+.checkout-form__success {
+  padding: var(--space-4) 0;
+}
+.checkout-form__success h3 {
+  color: var(--ink);
+  font-family: var(--font-roobert);
+  font-size: var(--text-subheading);
+  line-height: var(--lh-subheading);
+  font-weight: var(--weight-regular);
+  letter-spacing: -0.015em;
+  text-transform: none;
+  margin-bottom: 0;
+}
+.checkout-form__success p {
+  color: var(--ink-dim);
+  font-size: var(--text-body-sm);
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 720px) {
+  .product-view { grid-template-columns: 1fr; }
+  .product-view__media { aspect-ratio: 4/3; }
+  .checkout-view__body { grid-template-columns: 1fr; }
+}
+
+/* Search-result scroll target pulse — sem sombra, só opacidade */
+.product-card.is-highlighted {
+  animation: highlightPulse 1.4s var(--ease-signature);
+}
+@keyframes highlightPulse {
+  0%, 100% { opacity: 1; }
+  30% { opacity: 0.25; }
+}
+
+/* ---------- Hero ----------
+   Mídia ininterrupta do pixel 0 ao fim do viewport. A announce bar e o header
+   são fixed e FLUTUAM dissolvidos dentro da imagem — nada empilhado por cima
+   da foto. O tipo aqui sussurra: uma frase leve no canto inferior, dentro da
+   mesma medida de 1078px do resto da página. */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  background: var(--bg-invert);
+}
+
+.hero-media {
+  position: absolute;
+  inset: 0;
+}
+.hero-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+  border-radius: var(--radius-flat);
+}
+/* Véu leve: só o bastante para o tipo pousar, sem apagar a fotografia. */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.34) 0%, rgba(0,0,0,0.06) 34%, rgba(0,0,0,0.1) 62%, rgba(0,0,0,0.62) 100%);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: 0 var(--gutter) var(--space-7);
+}
+
+/* Tamanho vem dos degraus fixos no bloco "Escala tipográfica" — sem clamp/vw. */
+.hero-title {
+  line-height: var(--lh-heading);
+  font-weight: var(--weight-light);
+  letter-spacing: -0.03em;
+  color: var(--on-dark);
+}
+
+/* ---------- Ghost Pill Button ---------- */
+.btn {
+  display: inline-block;
+  padding: 11px 33px;
+  background: transparent;
+  border: 1px solid var(--color-obsidian);
+  border-radius: var(--radius-pill);
+  color: var(--color-obsidian);
+  font-family: var(--font-roobert);
+  font-size: var(--text-body-sm);
+  line-height: var(--lh-body-sm);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--dur-base) var(--ease-signature),
+              letter-spacing var(--dur-base) var(--ease-signature),
+              color var(--dur-base) var(--ease-signature),
+              background-color var(--dur-base) var(--ease-signature);
+}
+/* Sem fill no hover: a borda perde opacidade e o texto respira. */
+.btn:hover {
+  border-color: rgba(0,0,0,0.4);
+  letter-spacing: 0.06em;
+}
+
+/* Variante sobre superfície escura */
+.btn--outline {
+  background: transparent;
+  border-color: var(--line-dark);
+  color: var(--on-dark);
+}
+.btn--outline:hover {
+  border-color: rgba(255,255,255,0.7);
+  letter-spacing: 0.06em;
+}
+
+/* Filled Neutral Pill — o único fill sólido de ação, usado com parcimônia */
+.btn--solid {
+  background: var(--fill-neutral);
+  border-color: var(--fill-neutral-border);
+  color: var(--color-paper);
+}
+.btn--solid:hover {
+  border-color: rgba(255,255,255,0.55);
+  letter-spacing: 0.06em;
+}
+
+/* Ghost pill em contexto de lista (quicklinks do carrinho) */
+.pill-link {
+  display: block;
+  text-align: center;
+  padding: 11px 33px;
+  background: transparent;
+  border: 1px solid var(--color-obsidian);
+  border-radius: var(--radius-pill);
+  color: var(--color-obsidian);
+  font-size: var(--text-body-sm);
+  line-height: var(--lh-body-sm);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0;
+  transition: border-color var(--dur-base) var(--ease-signature),
+              letter-spacing var(--dur-base) var(--ease-signature);
+}
+.pill-link:hover {
+  border-color: rgba(0,0,0,0.4);
+  letter-spacing: 0.06em;
+}
+
+.hero-scroll {
+  position: absolute;
+  right: var(--space-4); bottom: var(--space-3);
+  z-index: 2;
+  font-size: var(--text-caption);
+  letter-spacing: 0.14em;
+  color: var(--on-dark-dim);
+  writing-mode: vertical-rl;
+}
+.hero-scroll span { display: block; margin-top: 6px; animation: bounceY 2.4s var(--ease-signature) infinite; }
+
+@keyframes bounceY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+/* ---------- Marquee ---------- */
+.marquee {
+  background: var(--color-paper);
+  color: var(--color-obsidian);
+  overflow: hidden;
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.marquee-track {
+  display: flex;
+  gap: var(--space-3);
+  white-space: nowrap;
+  width: max-content;
+  animation: scrollX 26s linear infinite;
+  font-family: var(--font-roobert);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.06em;
+}
+@keyframes scrollX {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ---------- Section head ----------
+   Headline de seção "whisper": peso 300, alinhada à esquerda dentro da medida
+   contida de 1078px. Nada de eixo central fora do hero. */
+.section-head {
+  text-align: left;
+  padding: var(--space-8) var(--gutter) var(--space-4);
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+}
+.section-head h2 {
+  font-weight: var(--weight-light);
+  letter-spacing: -0.03em;
+  line-height: var(--lh-heading);
+}
+.section-head p {
+  color: var(--ink-dim);
+  max-width: 42ch;
+  margin-top: var(--space-3);
+  font-size: var(--text-body-sm);
+  line-height: var(--lh-body);
+}
+
+/* ---------- Product grid ---------- */
+.collection { padding-bottom: var(--section-gap); }
+
+/* Backdrop atmosférico compartilhado por Streetwear Runner + A Manada.
+   No tema claro a foto vira um fantasma dessaturado sob wash de papel:
+   o canvas continua branco e o texto continua preto. */
+.street-scene {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--bg-alt);
+}
+.collection--alt,
+.pack {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+.section-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+.section-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+  border-radius: var(--radius-flat);
+  filter: grayscale(1) contrast(1.02);
+}
+.section-media::before {
+  content: "";
+  position: absolute; inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 30%, rgba(255,255,255,0.96) 100%);
+}
+.section-media::after {
+  content: "";
+  position: absolute; inset: 0;
+  z-index: 2;
+  background-image: var(--noise);
+  background-size: 240px 240px;
+  opacity: 0.18;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.collection--alt .section-head,
+.collection--alt .product-grid,
+.collection--alt .promo-banner {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Product grid — duas colunas reais ----------
+   Adaptação intencional de cliente (diverge de "listas de coluna única" no
+   sistema de design — ver Adaptações obrigatórias em sistema-de-design.md).
+   Sem chrome de card: nenhum fundo próprio, nenhuma borda, nenhum padding de
+   container, nenhum trilho entre as linhas — só a mídia sangrando e o título
+   abaixo. Duas colunas via CSS Grid; a direita desce pra criar o mosaico
+   escalonado. */
+.product-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 64px;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+.product-col {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+.product-col--right {
+  margin-top: 120px; /* desloca a coluna direita pra criar o efeito de mosaico escalonado */
+}
+
+.product-card {
+  background: none;
+  border: none;
+  border-radius: var(--radius-flat);
+  padding: 0;
+  width: 100%;
+  margin: 0;
+  cursor: pointer;
+  transition: opacity var(--dur-micro) ease;
+}
+.collection--alt .product-card { background: none; }
+
+.product-media {
+  aspect-ratio: 4/5;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-flat);
+}
+
+.product-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 15%;
+  border-radius: var(--radius-flat);
+  transition: transform var(--dur-slow) var(--ease-signature),
+              filter var(--dur-slow) var(--ease-signature);
+}
+
+/* Destaque tipo "spotlight": a foto sob o mouse ganha zoom + brilho sutil;
+   as outras do mesmo grid escurecem levemente. Só onde há mouse de verdade —
+   em touch isso ficaria preso ligado depois do tap, sem forma de "sair". */
+@media (hover: hover) and (pointer: fine) {
+  .product-card:hover .product-photo {
+    transform: scale(1.04);
+    filter: brightness(1.06);
+  }
+  .product-grid:hover .product-card:not(:hover) {
+    opacity: 0.65;
+  }
+}
+
+/* Selo tipográfico original (não é grafismo copiado) */
+.brand-badge {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30%;
+  color: var(--on-dark);
+  opacity: 0.9;
+  pointer-events: none;
+}
+.brand-badge text {
+  font-family: var(--font-roobert);
+  font-weight: var(--weight-regular);
+  fill: currentColor;
+}
+
+.product-card h3 {
+  font-family: var(--font-roobert);
+  text-transform: none;
+  font-size: var(--text-body);
+  line-height: var(--lh-body-sm);
+  font-weight: var(--weight-regular);
+  letter-spacing: -0.01em;
+  margin: var(--element-gap) 0 var(--space-1);
+}
+.product-card .price {
+  margin: 0;
+  color: var(--ink-dim);
+  font-size: var(--text-body-sm);
+  line-height: var(--lh-body-sm);
+}
+
+.tag {
+  position: absolute;
+  top: var(--space-2); left: var(--space-2);
+  font-family: var(--font-roobert);
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.04em;
+  padding: 4px var(--space-2);
+  border-radius: var(--radius-pill);
+  z-index: 2;
+}
+/* Filled Neutral Pill (fill único) vs. Ghost sobre mídia — só dois tratamentos. */
+.tag--new {
+  background: var(--fill-neutral);
+  border: 1px solid var(--fill-neutral-border);
+  color: var(--color-paper);
+}
+.tag--sold {
+  background: transparent;
+  border: 1px solid var(--line-dark);
+  color: var(--color-paper);
+}
+
+/* ---------- Outdoor hero / manifesto (faixa escura full-bleed) ---------- */
+.outdoor-hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 100vh;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  background: var(--bg-invert);
+}
+.outdoor-hero-media {
+  position: absolute;
+  inset: 0;
+}
+.outdoor-hero-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: var(--radius-flat);
+}
+/* Vinheta que apaga a marca d'água da ferramenta de geração no canto inferior
+   direito do vídeo. O arquivo é intocável, então a cobertura é um elemento por
+   cima — posicionado por JS em cima do canto REAL do frame (object-fit:cover
+   recorta o vídeo de forma diferente a cada largura), e pintado abaixo do
+   .outdoor-hero-overlay para receber o mesmo escurecimento da vizinhança. */
+.outdoor-hero-mask {
+  position: absolute;
+  pointer-events: none;
+  background: radial-gradient(farthest-side at 100% 100%,
+    #000 0%, #000 62%, rgba(0,0,0,0.60) 80%, rgba(0,0,0,0) 100%);
+}
+.outdoor-hero-mask[hidden] { display: none; }
+
+.outdoor-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0.82) 100%);
+}
+.outdoor-hero-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: 0 var(--gutter) var(--space-5);
+  color: var(--on-dark);
+}
+/* Tag ghost sobre superfície escura — sem fill, radius pill */
+.editorial-kicker {
+  display: inline-block;
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.12em;
+  background: transparent;
+  border: 1px solid var(--line-dark);
+  border-radius: var(--radius-pill);
+  color: var(--on-dark);
+  padding: 5px var(--element-gap);
+  margin-bottom: var(--element-gap);
+}
+.outdoor-hero-content h2 {
+  line-height: 1.05;
+  font-weight: var(--weight-light);
+  letter-spacing: -0.025em;
+  color: var(--on-dark);
+}
+
+@media (max-width: 479px) {
+  /* aspect-ratio deixa esta seção baixa em telas estreitas; a legenda precisa
+     descer um degrau ou engole a via/outdoor do vídeo. A goteira horizontal,
+     porém, continua sendo a da página: o bloco alinha no mesmo x de todo o
+     resto (era 8px aqui, contra 28px no restante). */
+  .outdoor-hero-content { padding: 0 var(--gutter) var(--element-gap); }
+  .editorial-kicker { font-size: var(--text-micro); padding: 4px var(--space-1); margin-bottom: var(--space-1); }
+  .outdoor-hero-content h2 { font-size: var(--text-body); line-height: 1.15; }
+}
+
+/* ---------- Stats strip ----------
+   Nada centralizado fora do hero: cada número e sua legenda alinham à
+   esquerda, sem divisórias verticais, com 8px entre as duas linhas. */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--element-gap);
+  row-gap: var(--space-4);
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: var(--space-5) var(--gutter);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.stat {
+  padding: 0;
+  text-align: left;
+  border-left: none;
+}
+.stat strong {
+  display: block;
+  font-family: var(--font-roobert);
+  font-size: var(--text-subheading);
+  line-height: var(--lh-subheading);
+  font-weight: var(--weight-light);
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.stat span {
+  display: block;
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  color: var(--ink-dim);
+  margin-top: var(--space-1);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Promo banner ---------- */
+.promo-banner {
+  max-width: var(--page-max-width);
+  margin: var(--section-gap) auto var(--space-6);
+  padding: var(--space-2) var(--gutter);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-flat);
+}
+.promo-banner p {
+  margin: 0;
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.05em;
+  color: var(--ink);
+}
+
+/* ---------- Pack / community ---------- */
+.pack {
+  text-align: left;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: var(--space-8) var(--gutter);
+}
+.pack h2 {
+  font-weight: var(--weight-light);
+  letter-spacing: -0.03em;
+  line-height: var(--lh-heading);
+}
+.pack p {
+  color: var(--ink-dim);
+  max-width: 42ch;
+  margin: var(--space-3) 0 var(--space-4);
+  font-size: var(--text-body-sm);
+  line-height: var(--lh-body);
+}
+
+/* ---------- Footer — bloco compacto de endereço/links ---------- */
+.site-footer {
+  background: var(--color-paper);
+  color: var(--color-felt-gray);
+  border-top: 1px solid var(--line);
+  padding: var(--space-5) 0 var(--space-3);
+  font-size: var(--text-micro);
+  line-height: var(--lh-micro);
+  font-weight: var(--weight-regular);
+}
+.footer-top {
+  max-width: var(--page-max-width);
+  margin: 0 auto var(--space-4);
+  padding: 0 var(--gutter);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.logo--footer {
+  /* .logo carrega order:1 / margin-right:auto do header — neutralizados aqui */
+  order: 0;
+  margin-right: 0;
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.02em;
+  color: var(--color-obsidian);
+}
+.newsletter {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: var(--radius-flat);
+  min-width: 280px;
+  transition: border-color var(--dur-micro) ease;
+}
+.newsletter:focus-within { border-color: var(--line); }
+.newsletter input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-flat);
+  color: var(--color-obsidian);
+  font-family: var(--font-roobert);
+  font-size: var(--text-micro);
+  line-height: var(--lh-micro);
+  padding: var(--space-1) 4px;
+  outline: none;
+}
+.newsletter button {
+  background: none;
+  border: none;
+  border-radius: var(--radius-flat);
+  color: var(--color-obsidian);
+  font-family: var(--font-roobert);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-micro);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: opacity var(--dur-micro) ease;
+}
+.newsletter button:hover { opacity: 0.45; }
+
+.footer-links {
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  padding: 0 var(--gutter) var(--space-4);
+  border-bottom: 1px solid var(--line-soft);
+}
+.footer-links h4 {
+  font-family: var(--font-roobert);
+  font-size: var(--text-micro);
+  line-height: var(--lh-micro);
+  letter-spacing: 0.1em;
+  color: var(--color-obsidian);
+  margin-bottom: var(--space-2);
+  font-weight: var(--weight-regular);
+}
+.footer-links a {
+  display: block;
+  font-size: var(--text-micro);
+  line-height: var(--lh-micro);
+  padding: var(--space-1) 0 0;
+  color: var(--color-felt-gray);
+  border-radius: var(--radius-flat);
+}
+.footer-links a:hover { color: var(--color-obsidian); }
+
+.footer-bottom {
+  max-width: var(--page-max-width);
+  margin: var(--space-3) auto 0;
+  padding: 0 var(--gutter);
+  font-size: var(--text-micro);
+  line-height: var(--lh-micro);
+  color: var(--color-felt-gray);
+}
+
+/* ========================================================
+   Escala tipográfica — degraus FIXOS
+   Zero clamp(), zero vw: o tipo de destaque salta entre valores
+   literais do sistema {39,45,54,78,94,225} conforme o breakpoint,
+   nunca interpola. Em desktop (>=900px) toda headline principal
+   de seção pousa em 78px peso 300 — inclusive o hero, que fica
+   no mesmo degrau e em peso 300: quem domina a dobra é a mídia,
+   não o tipo. O degrau 225px segue na escala, sem uso no hero.
+   ======================================================== */
+.hero-title { font-size: var(--text-subheading); }      /* 39 */
+.section-head h2,
+.pack h2,
+.outdoor-hero-content h2 { font-size: var(--text-subheading); }  /* 39 */
+
+@media (min-width: 480px) {
+  .hero-title { font-size: var(--text-subheading-lg); } /* 45 */
+  .section-head h2,
+  .pack h2,
+  .outdoor-hero-content h2 { font-size: var(--text-subheading-lg); }  /* 45 */
+}
+
+@media (min-width: 768px) {
+  .hero-title { font-size: var(--text-heading-sm); }    /* 54 */
+  .section-head h2,
+  .pack h2,
+  .outdoor-hero-content h2 { font-size: var(--text-heading-sm); }     /* 54 */
+}
+
+@media (min-width: 900px) {
+  .hero-title { font-size: var(--text-heading); }       /* 78 */
+  .section-head h2,
+  .pack h2 { font-size: var(--text-heading); }          /* 78 */
+  .outdoor-hero-content h2 {
+    font-size: var(--text-heading);                     /* 78 */
+    line-height: 0.8;
+  }
+  /* A medida do manifesto precisa acomodar 78px sem quebrar a frase. */
+  .outdoor-hero-content { max-width: var(--page-max-width); }
+}
+
+/* Colisão de glifo em telas estreitas.
+   Abaixo de 900px a headline de seção sai dos 78px e cai para 54/45/39px, mas
+   herdava o line-height 0.78 do degrau de display — em 375px "COLEÇÃO ASPHALT"
+   quebra em duas linhas e a cedilha do Ç encosta no A de ASPHALT. A regra de
+   travar as linhas em 0.70–0.80 vale para 78px OU MAIS; abaixo disso o bloco
+   precisa de folga para o descendente.
+   Medida na fonte real (Inter): a cedilha do Ç desce 0,205em e a caixa alta do A
+   sobe 0,744em — as duas tintas somam 0,949em, então qualquer entrelinha abaixo
+   disso faz os glifos se tocarem. 1,08 deixa ~0,13em (5,1px em 39px) de folga. */
+@media (max-width: 899px) {
+  .section-head h2,
+  .pack h2 {
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 860px) {
+  .main-nav {
+    /* Mesma ancoragem do .search-panel: preso ao header, não ao viewport.
+       Com `fixed` + `bottom:0` o painel encolhia para 24px de altura durante o
+       deslize do header (o `bottom` passava a ser a base do header) e só
+       pulava para a altura cheia quando a transição terminava. */
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 0; right: 0;
+    height: calc(100vh - var(--announce-h) - var(--header-h));
+    background: var(--bg);
+    flex-direction: column;
+    gap: 0;
+    padding: var(--space-2) var(--space-3);
+    transform: translateX(-100%);
+    transition: transform var(--dur-base) var(--ease-signature);
+    z-index: 95;
+  }
+  .main-nav.is-open { transform: translateX(0); }
+  .main-nav a {
+    padding: var(--space-1) 0;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: var(--text-body-sm);
+  }
+  .nav-toggle { display: flex; }
+
+  /* As duas colunas colapsam numa só; a direita perde o deslocamento. */
+  .product-grid { grid-template-columns: 1fr; }
+  .product-col--right { margin-top: 0; }
+  .stats-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .footer-links { grid-template-columns: 1fr; }
+}
