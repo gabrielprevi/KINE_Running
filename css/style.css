@@ -2095,7 +2095,7 @@ h1, h2, h3, h4 {
   border-radius: var(--radius-flat);
   z-index: 120;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--dur-micro) ease,
@@ -2116,6 +2116,7 @@ h1, h2, h3, h4 {
 .newsletter-modal__media {
   position: relative;
   min-height: 480px;
+  min-width: 0;
 }
 .newsletter-modal__media img {
   width: 100%;
@@ -2129,6 +2130,7 @@ h1, h2, h3, h4 {
   flex-direction: column;
   justify-content: center;
   gap: var(--space-3);
+  min-width: 0;
 }
 .newsletter-modal__content h2 {
   font-weight: var(--weight-light);
@@ -2147,6 +2149,7 @@ h1, h2, h3, h4 {
 }
 .newsletter-modal__form input {
   flex: 1;
+  min-width: 0;
   background: none;
   border: none;
   border-bottom: 1px solid var(--line);
@@ -2166,6 +2169,9 @@ h1, h2, h3, h4 {
   margin-top: var(--space-1);
 }
 @media (max-width: 719px) {
-  .newsletter-modal { grid-template-columns: 1fr; }
+  .newsletter-modal { grid-template-columns: minmax(0, 1fr); }
   .newsletter-modal__media { min-height: 200px; }
+  .newsletter-modal__content { padding: var(--space-4) var(--space-3); }
+  .newsletter-modal__form { flex-direction: column; align-items: stretch; }
+  .newsletter-modal__form input { flex: none; }
 }
