@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Raleway:wght@400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=20260910g">
+<link rel="stylesheet" href="css/style.css?v=20260923c">
 </head>
 <body>
 
@@ -34,6 +34,11 @@
   <button class="announce-arrow" id="announceNext" aria-label="Próximo">&#8250;</button>
 </div>
 
+<!-- LOGO FIXO (sempre visível, mesmo com o header escondido ao rolar) -->
+<a href="#top" class="site-logo-fixed">
+  <img src="assets/kine-logo-mark.png" alt="KINE">
+</a>
+
 <!-- HEADER -->
 <header class="site-header" id="siteHeader">
   <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">
@@ -47,14 +52,12 @@
     <a href="#manada">A MANADA</a>
   </nav>
 
-  <a href="#top" class="logo">KINE</a>
-
   <div class="header-actions">
     <button class="icon-btn" id="searchToggle" aria-label="Buscar">
       <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><line x1="21" y1="21" x2="16.6" y2="16.6" stroke="currentColor" stroke-width="2"/></svg>
     </button>
     <button class="icon-btn" id="cartToggle" aria-label="Carrinho">
-      <svg viewBox="0 0 24 24" width="20" height="20"><path d="M6 8h12l-1.5 11h-9L6 8z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20"><path d="M9 10V8a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 10h16v7a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-7z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
       <span class="cart-count">0</span>
     </button>
   </div>
@@ -117,6 +120,37 @@
 
     <button class="btn btn--solid product-view__add" id="productViewAdd">ADICIONAR AO CARRINHO</button>
     <p class="product-view__added" id="productViewAdded" hidden>Adicionado ao carrinho ✓</p>
+  </div>
+</div>
+
+<!-- LIGHTBOX (imagem do produto ampliada, com zoom e troca de foto) -->
+<div class="lightbox-backdrop" id="lightboxBackdrop"></div>
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Imagem ampliada do produto">
+  <button class="icon-btn lightbox__close" id="lightboxClose" aria-label="Fechar">&times;</button>
+  <button type="button" class="gallery-nav gallery-nav--prev" id="lightboxPrev" aria-label="Foto anterior" hidden>&#8249;</button>
+  <div class="lightbox__frame" id="lightboxFrame">
+    <img id="lightboxImage" src="" alt="">
+  </div>
+  <button type="button" class="gallery-nav gallery-nav--next" id="lightboxNext" aria-label="Próxima foto" hidden>&#8250;</button>
+</div>
+
+<!-- NEWSLETTER POPUP -->
+<div class="newsletter-backdrop" id="newsletterBackdrop"></div>
+<div class="newsletter-modal" id="newsletterModal" aria-label="Assine a lista da KINE" role="dialog" aria-modal="true">
+  <button class="icon-btn newsletter-modal__close" id="newsletterModalClose" aria-label="Fechar">&times;</button>
+  <div class="newsletter-modal__media">
+    <img src="assets/newsletter-street.jpg" alt="Grupo de amigos vestindo camisetas KINE Club numa rua movimentada, com cachorro e bicicletas ao fundo">
+  </div>
+  <div class="newsletter-modal__content">
+    <span class="editorial-kicker">JOIN THE MOVEMENT</span>
+    <h2>ENTRA NA LISTA.</h2>
+    <p>Drop novo, treino da manada, desconto de estreia — direto no seu e-mail, antes de todo mundo. 10% OFF na primeira compra.</p>
+    <form class="newsletter-modal__form" id="newsletterModalForm">
+      <input type="email" id="newsletterModalEmail" placeholder="seu@email.com" required aria-label="Seu e-mail">
+      <button type="submit" class="btn btn--solid">QUERO ENTRAR</button>
+    </form>
+    <p class="newsletter-modal__success" id="newsletterModalSuccess" hidden>Boa. Cupom de 10% chegou (simulado) — isso é um site de demonstração, nenhum e-mail foi enviado de verdade.</p>
+    <p class="newsletter-modal__fine">Site de teste — nenhum e-mail é enviado ou armazenado de verdade.</p>
   </div>
 </div>
 
@@ -204,7 +238,7 @@
 <!-- HERO -->
 <section class="hero" id="top">
   <div class="hero-media">
-    <img class="hero-photo" src="assets/hero-corredor.jpg" alt="Corredor em trilha na floresta, sob chuva">
+    <img class="hero-photo" src="assets/hero-join-the-movement-v2.jpg" alt="Grupo vestindo camisetas KINE Club em frente a uma bandeira 'Join the Movement' numa rua da cidade">
     <div class="hero-overlay"></div>
   </div>
   <div class="hero-content">
@@ -233,17 +267,17 @@
   <div class="product-grid">
 
     <div class="product-col product-col--left">
-      <article class="product-card" data-id="camiseta-dryfit" data-price="99.9" data-colors='[{"color":"Branco","images":["assets/products/camiseta-dryfit-branco-1.jpg"]},{"color":"Preto","images":["assets/products/camiseta-dryfit-preto-1.jpg"]}]' tabindex="0" role="button">
+      <article class="product-card" data-id="camiseta-dryfit" data-price="99.9" data-colors='[{"color":"Preto","images":["assets/products/camiseta-dryfit-preto-costas.jpg","assets/products/camiseta-dryfit-preto-frente.jpg"]},{"color":"Branco","images":["assets/products/camiseta-dryfit-branco-1.jpg"]}]' tabindex="0" role="button">
         <div class="product-media">
-          <img class="product-photo" src="assets/products/camiseta-dryfit-branco-1.jpg" alt="Camiseta dryfit branca">
+          <img class="product-photo" src="assets/products/camiseta-dryfit-preto-costas.jpg" alt="Camiseta dryfit preta">
         </div>
         <h3>Camiseta dryfit</h3>
         <p class="price">R$ 99,90</p>
       </article>
 
-      <article class="product-card" data-id="shorts-esporte" data-price="179.9" data-colors='[{"color":"Preto com Laranja","images":["assets/products/shorts-esporte-preto-laranja-1.jpg","assets/products/shorts-esporte-preto-laranja-2.jpg"]}]' tabindex="0" role="button">
+      <article class="product-card" data-id="shorts-esporte" data-price="179.9" data-colors='[{"color":"Preto com Laranja","images":["assets/products/shorts-esporte-preto-laranja-1-v2.jpg","assets/products/shorts-esporte-preto-laranja-2.jpg"]}]' tabindex="0" role="button">
         <div class="product-media">
-          <img class="product-photo" src="assets/products/shorts-esporte-preto-laranja-1.jpg" alt="Shorts esporte preto com laranja">
+          <img class="product-photo" src="assets/products/shorts-esporte-preto-laranja-1-v2.jpg" alt="Shorts esporte preto com laranja">
         </div>
         <h3>Shorts esporte</h3>
         <p class="price">R$ 179,90</p>
@@ -259,9 +293,9 @@
         <p class="price">R$ 129,90</p>
       </article>
 
-      <article class="product-card" data-id="bone-running" data-price="199.9" data-colors='[{"color":"Preto","images":["assets/products/bone-running-preto-1.jpg"]},{"color":"Verde","images":["assets/products/bone-running-verde-1.jpg"]}]' tabindex="0" role="button">
+      <article class="product-card" data-id="bone-running" data-price="199.9" data-colors='[{"color":"Preto","images":["assets/products/bone-running-preto-1-v2.jpg"]},{"color":"Verde","images":["assets/products/bone-running-verde-1-v2.jpg"]}]' tabindex="0" role="button">
         <div class="product-media">
-          <img class="product-photo" src="assets/products/bone-running-preto-1.jpg" alt="Boné RUNNING preto">
+          <img class="product-photo" src="assets/products/bone-running-preto-1-v2.jpg" alt="Boné RUNNING preto">
         </div>
         <h3>Boné RUNNING</h3>
         <p class="price">R$ 199,90</p>
@@ -282,9 +316,9 @@
       loop
       playsinline
       preload="metadata"
-      poster="assets/outdoor-manifesto-poster.jpg"
+      poster="assets/outdoor-manifesto-poster.jpg?v=2"
     >
-      <source src="assets/outdoor-manifesto.mp4" type="video/mp4">
+      <source src="assets/outdoor-manifesto.mp4?v=2" type="video/mp4">
     </video>
     <div class="outdoor-hero-mask" id="outdoorHeroMask" aria-hidden="true" hidden></div>
   </div>
@@ -318,9 +352,9 @@
   <div class="product-grid product-grid--wide">
 
     <div class="product-col product-col--left">
-      <article class="product-card" data-id="regata-machao" data-price="150.9" data-colors='[{"color":"Branca","images":["assets/products/regata-machao-branca-1.jpg","assets/products/regata-machao-branca-2.jpg"]},{"color":"Preto","images":["assets/products/regata-machao-preto-1.jpg"]}]' tabindex="0" role="button">
+      <article class="product-card" data-id="regata-machao" data-price="150.9" data-colors='[{"color":"Preto","images":["assets/products/regata-machao-preto-costas.jpg","assets/products/regata-machao-preto-frente.jpg"]},{"color":"Branca","images":["assets/products/regata-machao-branca-1-v2.jpg","assets/products/regata-machao-branca-2.jpg"]}]' tabindex="0" role="button">
         <div class="product-media">
-          <img class="product-photo" src="assets/products/regata-machao-branca-1.jpg" alt="Regata machão branca">
+          <img class="product-photo" src="assets/products/regata-machao-preto-costas.jpg" alt="Regata machão preta">
         </div>
         <h3>Regata machão</h3>
         <p class="price">R$ 150,90</p>
@@ -344,9 +378,9 @@
         <p class="price">R$ 149,90</p>
       </article>
 
-      <article class="product-card" data-id="camiseta-over" data-price="99.9" data-colors='[{"color":"Branco","images":["assets/products/camiseta-over-branco-1.jpg"]},{"color":"Preto","images":["assets/products/camiseta-over-preto-1.jpg"]}]' tabindex="0" role="button">
+      <article class="product-card" data-id="camiseta-over" data-price="99.9" data-colors='[{"color":"Preto","images":["assets/products/camiseta-over-preto-costas.jpg","assets/products/camiseta-over-preto-frente.jpg"]},{"color":"Branco","images":["assets/products/camiseta-over-branco-1.jpg"]}]' tabindex="0" role="button">
         <div class="product-media">
-          <img class="product-photo" src="assets/products/camiseta-over-branco-1.jpg" alt="Camiseta over branca">
+          <img class="product-photo" src="assets/products/camiseta-over-preto-costas.jpg" alt="Camiseta over preta">
         </div>
         <h3>Camiseta over</h3>
         <p class="price">R$ 99,90</p>
@@ -367,6 +401,25 @@
   <a href="#top" class="btn">ENTRAR NA LISTA (SEM CADASTRO)</a>
 </section>
 </div>
+
+<!-- HYROX VIDEO (sled push, full-bleed como o MANIFESTO, sem cortar o frame) -->
+<section class="outdoor-hero" id="hyrox-video">
+  <div class="outdoor-hero-media">
+    <video
+      class="outdoor-hero-video"
+      id="outdoorHeroVideoHyrox"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      poster="assets/hyrox-sled-push-v2-poster.jpg"
+    >
+      <source src="assets/hyrox-sled-push-v2.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="outdoor-hero-overlay"></div>
+</section>
 
 <!-- FOOTER -->
 <footer class="site-footer">
@@ -401,7 +454,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="js/script.js?v=20260910c"></script>
-<script src="js/cinematic.js?v=20260903c"></script>
+<script src="js/script.js?v=20260923b"></script>
+<script src="js/cinematic.js?v=20260917b"></script>
 </body>
 </html>

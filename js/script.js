@@ -264,6 +264,11 @@ function renderGalleryImage() {
   galleryDots.querySelectorAll('.gallery-dot').forEach((dot, i) => {
     dot.classList.toggle('is-active', i === galleryIndex);
   });
+  if (lightbox && lightbox.classList.contains('is-open')) {
+    lightboxImage.src = galleryImages[galleryIndex];
+    lightboxImage.alt = productViewImage.alt;
+    resetLightboxZoom();
+  }
 }
 
 function setupGallery(images) {
@@ -272,6 +277,8 @@ function setupGallery(images) {
   const hasMultiple = images.length > 1;
   galleryPrev.hidden = !hasMultiple;
   galleryNext.hidden = !hasMultiple;
+  if (lightboxPrev) lightboxPrev.hidden = !hasMultiple;
+  if (lightboxNext) lightboxNext.hidden = !hasMultiple;
   galleryDots.innerHTML = hasMultiple
     ? images.map(() => '<span class="gallery-dot"></span>').join('')
     : '';
@@ -367,14 +374,113 @@ galleryNext.addEventListener('click', (e) => { e.stopPropagation(); showNextImag
 
 // Swipe support so the gallery also responds to a finger/pointer drag, not just the arrows.
 let swipeStartX = null;
-productViewMedia.addEventListener('pointerdown', (e) => { swipeStartX = e.clientX; });
+let wasSwipe = false;
+productViewMedia.addEventListener('pointerdown', (e) => { swipeStartX = e.clientX; wasSwipe = false; });
 productViewMedia.addEventListener('pointerup', (e) => {
   if (swipeStartX === null) return;
   const delta = e.clientX - swipeStartX;
   swipeStartX = null;
   if (Math.abs(delta) < 40) return;
+  wasSwipe = true;
   if (delta < 0) showNextImage(); else showPrevImage();
 });
+
+// ---------- Lightbox: clicar na imagem do produto abre ela ampliada, com zoom e navegação ----------
+const lightboxBackdrop = document.getElementById('lightboxBackdrop');
+const lightbox = document.getElementById('lightbox');
+const lightboxClose = document.getElementById('lightboxClose');
+const lightboxFrame = document.getElementById('lightboxFrame');
+const lightboxImage = document.getElementById('lightboxImage');
+const lightboxPrev = document.getElementById('lightboxPrev');
+const lightboxNext = document.getElementById('lightboxNext');
+
+const LIGHTBOX_ZOOM = 2.4;
+let lbIsZoomed = false;
+let lbPanX = 0, lbPanY = 0;
+let lbDragging = false, lbDragMoved = false;
+let lbDragStartX = 0, lbDragStartY = 0, lbDragStartPanX = 0, lbDragStartPanY = 0;
+
+function applyLightboxTransform() {
+  lightboxImage.style.transform = `translate(${lbPanX}px, ${lbPanY}px) scale(${lbIsZoomed ? LIGHTBOX_ZOOM : 1})`;
+}
+
+function resetLightboxZoom() {
+  lbIsZoomed = false;
+  lbPanX = 0;
+  lbPanY = 0;
+  lightboxFrame.classList.remove('is-zoomed');
+  applyLightboxTransform();
+}
+
+function clampLightboxPan() {
+  const maxX = (lightboxImage.clientWidth * (LIGHTBOX_ZOOM - 1)) / 2;
+  const maxY = (lightboxImage.clientHeight * (LIGHTBOX_ZOOM - 1)) / 2;
+  lbPanX = Math.max(-maxX, Math.min(maxX, lbPanX));
+  lbPanY = Math.max(-maxY, Math.min(maxY, lbPanY));
+}
+
+function openLightbox() {
+  if (!lightbox || !productViewImage.src) return;
+  lightboxImage.src = productViewImage.src;
+  lightboxImage.alt = productViewImage.alt;
+  resetLightboxZoom();
+  lightbox.classList.add('is-open');
+  lightboxBackdrop.classList.add('is-open');
+}
+
+function closeLightbox() {
+  lightbox.classList.remove('is-open');
+  lightboxBackdrop.classList.remove('is-open');
+  resetLightboxZoom();
+}
+
+if (lightbox) {
+  productViewImage.addEventListener('click', () => {
+    if (wasSwipe) { wasSwipe = false; return; }
+    openLightbox();
+  });
+
+  lightboxImage.addEventListener('pointerdown', (e) => {
+    lbDragging = true;
+    lbDragMoved = false;
+    lbDragStartX = e.clientX;
+    lbDragStartY = e.clientY;
+    lbDragStartPanX = lbPanX;
+    lbDragStartPanY = lbPanY;
+    lightboxImage.setPointerCapture(e.pointerId);
+  });
+
+  lightboxImage.addEventListener('pointermove', (e) => {
+    if (!lbDragging) return;
+    const dx = e.clientX - lbDragStartX;
+    const dy = e.clientY - lbDragStartY;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) lbDragMoved = true;
+    if (!lbIsZoomed || !lbDragMoved) return;
+    lbPanX = lbDragStartPanX + dx;
+    lbPanY = lbDragStartPanY + dy;
+    clampLightboxPan();
+    lightboxImage.classList.add('is-dragging');
+    applyLightboxTransform();
+  });
+
+  lightboxImage.addEventListener('pointerup', () => {
+    lbDragging = false;
+    lightboxImage.classList.remove('is-dragging');
+    if (lbDragMoved) { lbDragMoved = false; return; }
+    lbIsZoomed = !lbIsZoomed;
+    lightboxFrame.classList.toggle('is-zoomed', lbIsZoomed);
+    if (!lbIsZoomed) { lbPanX = 0; lbPanY = 0; }
+    applyLightboxTransform();
+  });
+
+  lightboxPrev.addEventListener('click', (e) => { e.stopPropagation(); showPrevImage(); });
+  lightboxNext.addEventListener('click', (e) => { e.stopPropagation(); showNextImage(); });
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightboxBackdrop.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox || e.target === lightboxFrame) closeLightbox();
+  });
+}
 
 document.addEventListener('keydown', (e) => {
   if (!productView.classList.contains('is-open')) return;
@@ -548,10 +654,12 @@ checkoutForm.addEventListener('submit', (e) => {
 // ---------- Close open overlay with Escape ----------
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
-  if (checkoutView.classList.contains('is-open')) closeCheckout();
+  if (lightbox.classList.contains('is-open')) closeLightbox();
+  else if (checkoutView.classList.contains('is-open')) closeCheckout();
   else if (productView.classList.contains('is-open')) closeProductView();
   else if (cartDrawer.classList.contains('is-open')) closeCart();
   else if (searchPanel.classList.contains('is-open')) closeSearch();
+  else if (newsletterModal.classList.contains('is-open')) closeNewsletterModal();
 });
 
 // ---------- Chrome fixo (announce-bar + header + scrim) ----------
@@ -746,6 +854,25 @@ if (outdoorHeroVideo) {
   reduceMotionQuery.addEventListener('change', (e) => applyMotionPreference(e.matches));
 }
 
+const outdoorVideoElHyrox = document.getElementById('outdoorHeroVideoHyrox');
+
+// ---------- Respeita prefers-reduced-motion no vídeo HYROX também ----------
+if (outdoorVideoElHyrox) {
+  const reduceMotionQueryHyrox = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function applyMotionPreferenceHyrox(reduce) {
+    if (reduce) {
+      outdoorVideoElHyrox.pause();
+      outdoorVideoElHyrox.removeAttribute('autoplay');
+    } else if (outdoorVideoElHyrox.paused) {
+      outdoorVideoElHyrox.play().catch(() => {});
+    }
+  }
+
+  applyMotionPreferenceHyrox(reduceMotionQueryHyrox.matches);
+  reduceMotionQueryHyrox.addEventListener('change', (e) => applyMotionPreferenceHyrox(e.matches));
+}
+
 // ---------- Custom cursor over product images (desktop only) ----------
 // Gated once at load, not via a live-updating listener: a static test site
 // doesn't need to handle someone plugging in a mouse mid-session, and gating
@@ -782,5 +909,42 @@ if (customCursor && window.matchMedia('(hover: hover) and (pointer: fine)').matc
     el.addEventListener('pointerleave', () => {
       customCursor.classList.remove('is-active');
     });
+  });
+}
+
+// ---------- Newsletter popup (aparece uma vez, depois de 4s) ----------
+const newsletterBackdrop = document.getElementById('newsletterBackdrop');
+const newsletterModal = document.getElementById('newsletterModal');
+const newsletterModalClose = document.getElementById('newsletterModalClose');
+const newsletterModalForm = document.getElementById('newsletterModalForm');
+const newsletterModalSuccess = document.getElementById('newsletterModalSuccess');
+const NEWSLETTER_KEY = 'kineNewsletterDismissed';
+
+function openNewsletterModal() {
+  if (!newsletterModal || !newsletterBackdrop) return;
+  if (localStorage.getItem(NEWSLETTER_KEY)) return;
+  // não empilha por cima de outro overlay já aberto
+  const anyOpen = document.querySelector('.product-view.is-open, .checkout-view.is-open, .cart-drawer.is-open, .search-panel.is-open, .lightbox.is-open');
+  if (anyOpen) return;
+  newsletterModal.classList.add('is-open');
+  newsletterBackdrop.classList.add('is-open');
+}
+
+function closeNewsletterModal() {
+  if (!newsletterModal || !newsletterBackdrop) return;
+  newsletterModal.classList.remove('is-open');
+  newsletterBackdrop.classList.remove('is-open');
+  try { localStorage.setItem(NEWSLETTER_KEY, '1'); } catch (e) {}
+}
+
+if (newsletterModal) {
+  setTimeout(openNewsletterModal, 2000);
+  newsletterModalClose.addEventListener('click', closeNewsletterModal);
+  newsletterBackdrop.addEventListener('click', closeNewsletterModal);
+  newsletterModalForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    newsletterModalForm.hidden = true;
+    newsletterModalSuccess.hidden = false;
+    try { localStorage.setItem(NEWSLETTER_KEY, '1'); } catch (e) {}
   });
 }

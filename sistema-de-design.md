@@ -162,7 +162,7 @@ Curva assinatura `cubic-bezier(0.19, 1, 0.22, 1)` aplicada a transform, cor e op
 
 Estas são as únicas divergências permitidas em relação à referência, e existem porque o conteúdo abaixo é intocável por decisão do cliente:
 
-1. **Densidade de imagem.** A referência prega "um único gesto visual por página". A KINE precisa manter: imagem do hero (`assets/hero-corredor.jpg`), vídeo do Manifesto (`assets/outdoor-manifesto.mp4` + poster) e 7 fotos de produto (`assets/products/*.jpg`). **Adaptação:** o hero é o gesto visual principal; o vídeo do Manifesto é a segunda faixa full-bleed escura; as fotos de produto entram como *project list rows* (imagem sangrando, sem chrome, radius 0px), com longos trechos tipográficos silenciosos entre elas para preservar o ritmo editorial.
+1. **Densidade de imagem.** A referência prega "um único gesto visual por página". A KINE precisa manter: imagem do hero (`assets/hero-join-the-movement.jpg`), vídeo do Manifesto (`assets/outdoor-manifesto.mp4` + poster) e 7 fotos de produto (`assets/products/*.jpg`). **Adaptação:** o hero é o gesto visual principal; o vídeo do Manifesto é a segunda faixa full-bleed escura; as fotos de produto entram como *project list rows* (imagem sangrando, sem chrome, radius 0px), com longos trechos tipográficos silenciosos entre elas para preservar o ritmo editorial.
 2. **Conteúdo dos produtos** (nome, preço, cor, foto) não pode ser alterado — só reestilizado e reposicionado.
 3. **Marca:** o wordmark é **KINE** (substitui TEMPO em todo o site).
 4. Toda regra de cor, tipografia, raio, espaçamento e movimento acima vale **sem exceção** — inclusive a proibição do verde-limão `#c8ff4d` e da fonte Anton, que saem do sistema.

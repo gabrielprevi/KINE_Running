@@ -18,6 +18,8 @@
   --color-pewter:     #808080;
 
   /* Único gesto cromático do sistema. Reservado a wash de MÍDIA — jamais UI. */
+  --color-brand-pink: #fb87bf; /* rosa oficial da marca KINE, extraído do
+    logo — única cor crônica de UI autorizada, usada com parcimônia */
   --gradient-iridescent-fade:
     linear-gradient(90deg, rgb(160,224,171), rgb(255,172,46) 50%, rgb(165,45,37));
 
@@ -26,21 +28,28 @@
      o resto da folha os consome, então remapeá-los troca o tema inteiro de uma vez
      sem quebrar seletor nenhum. Não existe mais --accent nem --danger: o sistema
      não tem cor cromática. */
-  --bg:         var(--color-paper);
-  --bg-alt:     var(--color-paper);
-  --bg-invert:  var(--color-obsidian);
-  --ink:        var(--color-obsidian);
-  --ink-2:      var(--color-inkstone);
-  --ink-dim:    var(--color-felt-gray);
-  --ink-mute:   var(--color-ash-mist);
+  /* Tema definitivo (decisão do cliente, comparado ao Instagram real da
+     marca): base preta, tinta branca, rosa como único acento — não a
+     inversão genérica do "monopo saigon". Todo componente com cor
+     hardcoded (não pelo alias) foi revisado nesta troca: announce-bar,
+     marquee e cursor customizado viraram rosa; header, footer, botões
+     ghost e o overlay de .section-media (que era um wash quase-branco,
+     pensado pra tinta escura) foram corrigidos pra preto. */
+  --bg:         var(--color-obsidian);
+  --bg-alt:     var(--color-inkstone);
+  --bg-invert:  var(--color-obsidian); /* fallback SEMPRE escuro atrás de mídia — não é espelho de --bg */
+  --ink:        var(--color-paper);
+  --ink-2:      #e8e8e8;
+  --ink-dim:    #9a9a9a;
+  --ink-mute:   #6d6d6d;
   --on-dark:    var(--color-paper);
   --on-dark-dim: rgba(255,255,255,0.66);
   /* Segunda camada de tinta do chrome invertido. Na referência só a wordmark
      ancora em branco cheio; nav, ícones, badge e barra de anúncio dissolvem
      dentro da imagem a ~47%. É o que separa "repousar sobre" de "viver dentro". */
   --on-dark-soft: rgba(255,255,255,0.47);
-  --line:       var(--color-obsidian);       /* hairline estrutural (superfície clara) */
-  --line-soft:  rgba(0,0,0,0.18);            /* separador silencioso — ainda R=G=B */
+  --line:       rgba(255,255,255,0.3);       /* hairline estrutural (superfície escura agora) */
+  --line-soft:  rgba(255,255,255,0.18);      /* separador silencioso — ainda R=G=B */
   --line-dark:  rgba(255,255,255,0.3);       /* hairline sobre superfície escura */
   /* ÚNICO fill sólido autorizado (Filled Neutral Pill). Todo elemento que não
      seja Ghost (transparente + borda 1px) usa exatamente este par — inclusive
@@ -186,7 +195,7 @@ h1, h2, h3, h4 {
   top: 0; left: 0; right: 0;
   z-index: 101;
   height: var(--announce-h);
-  background: var(--color-paper);
+  background: var(--color-brand-pink);
   color: var(--color-obsidian);
   border-bottom: 1px solid var(--line);
   transition: transform var(--dur-base) var(--ease-signature);
@@ -337,7 +346,7 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-paper);
+  background: var(--color-brand-pink);
   border-radius: var(--radius-pill);
   transform: scale(0);
   transition: transform var(--dur-base) var(--ease-signature);
@@ -363,7 +372,7 @@ h1, h2, h3, h4 {
   left: 0; right: 0;
   z-index: 100;
   height: var(--header-h);
-  background: var(--color-paper);
+  background: var(--bg);
   border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
@@ -406,8 +415,26 @@ h1, h2, h3, h4 {
 }
 .logo:hover { opacity: 0.55; }
 
+.site-logo-fixed {
+  position: fixed;
+  top: calc(var(--announce-h) + var(--header-h) / 2);
+  left: var(--gutter);
+  transform: translateY(-50%);
+  z-index: 102;
+  display: flex;
+  align-items: center;
+  transition: opacity var(--dur-micro) ease;
+}
+.site-logo-fixed img {
+  display: block;
+  height: 32px;
+  width: auto;
+}
+.site-logo-fixed:hover { opacity: 0.7; }
+
 .main-nav {
   order: 2;
+  margin-left: auto;
   display: flex;
   gap: var(--space-3);
   font-size: var(--text-caption);
@@ -451,9 +478,9 @@ h1, h2, h3, h4 {
 .cart-count {
   position: absolute;
   top: -4px; right: -4px;
-  background: var(--fill-neutral);
+  background: var(--color-brand-pink);
   border: 1px solid var(--color-paper);
-  color: var(--color-paper);
+  color: var(--color-obsidian);
   font-size: var(--text-caption);
   line-height: 1;
   font-family: var(--font-roobert);
@@ -778,10 +805,76 @@ h1, h2, h3, h4 {
   height: 100%;
   object-fit: cover;
   border-radius: var(--radius-flat);
+  cursor: zoom-in;
 }
 .product-view__soldout {
   position: absolute;
   top: var(--space-1); left: var(--space-1);
+}
+
+/* ---------- Lightbox: imagem do produto ampliada, com zoom e navegação ---------- */
+.lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 125;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-micro) ease;
+}
+.lightbox-backdrop.is-open { opacity: 1; pointer-events: auto; }
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 126;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-micro) ease;
+}
+.lightbox.is-open { opacity: 1; pointer-events: auto; }
+
+.lightbox__close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 2;
+  background: transparent;
+  color: var(--on-dark);
+  font-size: var(--text-body);
+  line-height: 1;
+}
+
+.lightbox__frame {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox__frame img {
+  max-width: 100%;
+  max-height: 88vh;
+  object-fit: contain;
+  cursor: zoom-in;
+  display: block;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  transform: translate(0px, 0px) scale(1);
+  transition: transform 0.2s ease;
+}
+.lightbox__frame.is-zoomed img {
+  cursor: grab;
+}
+.lightbox__frame img.is-dragging {
+  cursor: grabbing;
+  transition: none;
 }
 
 .gallery-nav {
@@ -877,9 +970,9 @@ h1, h2, h3, h4 {
 }
 .size-btn:hover { border-color: var(--line); }
 .size-btn.is-selected {
-  background: var(--fill-neutral);
-  border-color: var(--fill-neutral-border);
-  color: var(--color-paper);
+  background: var(--color-brand-pink);
+  border-color: var(--color-brand-pink);
+  color: var(--color-obsidian);
 }
 .size-btn:disabled {
   opacity: 0.3;
@@ -888,7 +981,9 @@ h1, h2, h3, h4 {
 /* Seletor de cor — mesma linguagem visual do seletor de tamanho (pill, mesmos
    tokens, mesmos estados), só com largura pelo conteúdo em vez de 44px fixos,
    já que "Preto"/"Branca" não cabem numa caixa dimensionada pra "P"/"GG".
-   Nunca cor cromática de UI aqui — a cor do produto só aparece na foto. */
+   Em repouso, nenhuma cor cromática de UI aqui — a cor do produto só aparece
+   na foto. O estado .is-selected é a exceção deliberada: usa --color-brand-pink,
+   a única cor crônica de UI autorizada no sistema. */
 .color-btn {
   height: 44px;
   padding: 0 18px;
@@ -906,9 +1001,9 @@ h1, h2, h3, h4 {
 }
 .color-btn:hover { border-color: var(--line); }
 .color-btn.is-selected {
-  background: var(--fill-neutral);
-  border-color: var(--fill-neutral-border);
-  color: var(--color-paper);
+  background: var(--color-brand-pink);
+  border-color: var(--color-brand-pink);
+  color: var(--color-obsidian);
 }
 .color-btn:disabled {
   opacity: 0.3;
@@ -1266,7 +1361,7 @@ h1, h2, h3, h4 {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 25%;
+  object-position: center 38%;
   border-radius: var(--radius-flat);
 }
 /* Véu leve: só o bastante para o tipo pousar, sem apagar a fotografia. */
@@ -1298,9 +1393,9 @@ h1, h2, h3, h4 {
   display: inline-block;
   padding: 11px 33px;
   background: transparent;
-  border: 1px solid var(--color-obsidian);
+  border: 1px solid var(--line-dark);
   border-radius: var(--radius-pill);
-  color: var(--color-obsidian);
+  color: var(--on-dark);
   font-family: var(--font-roobert);
   font-size: var(--text-body-sm);
   line-height: var(--lh-body-sm);
@@ -1315,7 +1410,7 @@ h1, h2, h3, h4 {
 }
 /* Sem fill no hover: a borda perde opacidade e o texto respira. */
 .btn:hover {
-  border-color: rgba(0,0,0,0.4);
+  border-color: rgba(255,255,255,0.4);
   letter-spacing: 0.06em;
 }
 
@@ -1332,9 +1427,9 @@ h1, h2, h3, h4 {
 
 /* Filled Neutral Pill — o único fill sólido de ação, usado com parcimônia */
 .btn--solid {
-  background: var(--fill-neutral);
-  border-color: var(--fill-neutral-border);
-  color: var(--color-paper);
+  background: var(--color-brand-pink);
+  border-color: var(--color-brand-pink);
+  color: var(--color-obsidian);
 }
 .btn--solid:hover {
   border-color: rgba(255,255,255,0.55);
@@ -1347,9 +1442,9 @@ h1, h2, h3, h4 {
   text-align: center;
   padding: 11px 33px;
   background: transparent;
-  border: 1px solid var(--color-obsidian);
+  border: 1px solid var(--line-dark);
   border-radius: var(--radius-pill);
-  color: var(--color-obsidian);
+  color: var(--on-dark);
   font-size: var(--text-body-sm);
   line-height: var(--lh-body-sm);
   font-weight: var(--weight-regular);
@@ -1358,7 +1453,7 @@ h1, h2, h3, h4 {
               letter-spacing var(--dur-base) var(--ease-signature);
 }
 .pill-link:hover {
-  border-color: rgba(0,0,0,0.4);
+  border-color: rgba(255,255,255,0.4);
   letter-spacing: 0.06em;
 }
 
@@ -1380,7 +1475,7 @@ h1, h2, h3, h4 {
 
 /* ---------- Marquee ---------- */
 .marquee {
-  background: var(--color-paper);
+  background: var(--color-brand-pink);
   color: var(--color-obsidian);
   overflow: hidden;
   padding: var(--space-2) 0;
@@ -1464,7 +1559,7 @@ h1, h2, h3, h4 {
   content: "";
   position: absolute; inset: 0;
   z-index: 1;
-  background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 30%, rgba(255,255,255,0.96) 100%);
+  background: linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.96) 100%);
 }
 .section-media::after {
   content: "";
@@ -1578,7 +1673,7 @@ h1, h2, h3, h4 {
 }
 .product-card .price {
   margin: 0;
-  color: var(--ink-dim);
+  color: var(--color-brand-pink);
   font-size: var(--text-body-sm);
   line-height: var(--lh-body-sm);
 }
@@ -1627,6 +1722,13 @@ h1, h2, h3, h4 {
   height: 100%;
   object-fit: cover;
   object-position: center;
+  border-radius: var(--radius-flat);
+}
+.outdoor-hero-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 80%;
   border-radius: var(--radius-flat);
 }
 /* Vinheta que apaga a marca d'água da ferramenta de geração no canto inferior
@@ -1763,7 +1865,7 @@ h1, h2, h3, h4 {
 
 /* ---------- Footer — bloco compacto de endereço/links ---------- */
 .site-footer {
-  background: var(--color-paper);
+  background: var(--bg);
   color: var(--color-felt-gray);
   border-top: 1px solid var(--line);
   padding: var(--space-5) 0 var(--space-3);
@@ -1788,7 +1890,7 @@ h1, h2, h3, h4 {
   font-size: var(--text-body-sm);
   font-weight: var(--weight-regular);
   letter-spacing: 0.02em;
-  color: var(--color-obsidian);
+  color: var(--ink);
 }
 .newsletter {
   display: flex;
@@ -1804,7 +1906,7 @@ h1, h2, h3, h4 {
   background: transparent;
   border: none;
   border-radius: var(--radius-flat);
-  color: var(--color-obsidian);
+  color: var(--ink);
   font-family: var(--font-roobert);
   font-size: var(--text-micro);
   line-height: var(--lh-micro);
@@ -1815,7 +1917,7 @@ h1, h2, h3, h4 {
   background: none;
   border: none;
   border-radius: var(--radius-flat);
-  color: var(--color-obsidian);
+  color: var(--ink);
   font-family: var(--font-roobert);
   font-weight: var(--weight-regular);
   font-size: var(--text-micro);
@@ -1839,7 +1941,7 @@ h1, h2, h3, h4 {
   font-size: var(--text-micro);
   line-height: var(--lh-micro);
   letter-spacing: 0.1em;
-  color: var(--color-obsidian);
+  color: var(--ink);
   margin-bottom: var(--space-2);
   font-weight: var(--weight-regular);
 }
@@ -1851,7 +1953,7 @@ h1, h2, h3, h4 {
   color: var(--color-felt-gray);
   border-radius: var(--radius-flat);
 }
-.footer-links a:hover { color: var(--color-obsidian); }
+.footer-links a:hover { color: var(--ink); }
 
 .footer-bottom {
   max-width: var(--page-max-width);
@@ -1945,10 +2047,125 @@ h1, h2, h3, h4 {
     font-size: var(--text-body-sm);
   }
   .nav-toggle { display: flex; }
+  .header-actions { margin-left: auto; }
 
   /* As duas colunas colapsam numa só; a direita perde o deslocamento. */
   .product-grid { grid-template-columns: 1fr; }
   .product-col--right { margin-top: 0; }
   .stats-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .footer-links { grid-template-columns: 1fr; }
+}
+
+/* #hyrox-video usa a mesma estrutura visual do .outdoor-hero (largura cheia,
+   mesmo tratamento do MANIFESTO), mas com a proporção real do vídeo (retrato,
+   832x1108) em vez do 1:1 do vídeo do MANIFESTO, e sem limite de altura — assim
+   o frame inteiro cabe sem cortar nada, só ficando uma seção mais alta (rola
+   um pouco mais a página pra ver o vídeo completo, mas nada é cortado). */
+#hyrox-video {
+  aspect-ratio: 832 / 1108;
+  max-height: none;
+}
+
+/* ---------- Newsletter popup ---------- */
+/* Mesma mecânica visual do .product-view (fixed, centralizado, grid 2
+   colunas, fade+scale), só com classes próprias e um pouco mais compacto. */
+.newsletter-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  z-index: 115;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-micro) ease;
+}
+.newsletter-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.newsletter-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -48%) scale(0.985);
+  width: min(1040px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--bg-alt);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-flat);
+  z-index: 120;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-micro) ease,
+              transform var(--dur-base) var(--ease-signature);
+}
+.newsletter-modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+.newsletter-modal__close {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 2;
+  color: var(--ink);
+}
+.newsletter-modal__media {
+  position: relative;
+  min-height: 480px;
+}
+.newsletter-modal__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+}
+.newsletter-modal__content {
+  padding: var(--space-7) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+}
+.newsletter-modal__content h2 {
+  font-weight: var(--weight-light);
+  letter-spacing: -0.02em;
+  font-size: var(--text-subheading);
+}
+.newsletter-modal__content p {
+  color: var(--ink-dim);
+  font-size: var(--text-body-sm);
+  line-height: var(--lh-body);
+}
+.newsletter-modal__form {
+  display: flex;
+  gap: var(--element-gap);
+  margin-top: var(--space-2);
+}
+.newsletter-modal__form input {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  padding: var(--space-2) 0;
+  font-size: var(--text-body-sm);
+}
+.newsletter-modal__form[hidden] { display: none; }
+.newsletter-modal__form input::placeholder { color: var(--ink-dim); }
+.newsletter-modal__success {
+  font-size: var(--text-body-sm);
+  color: var(--ink);
+}
+.newsletter-modal__fine {
+  font-size: var(--text-caption);
+  color: var(--ink-dim);
+  margin-top: var(--space-1);
+}
+@media (max-width: 719px) {
+  .newsletter-modal { grid-template-columns: 1fr; }
+  .newsletter-modal__media { min-height: 200px; }
 }
