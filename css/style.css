@@ -1723,6 +1723,14 @@ h1, h2, h3, h4 {
   object-fit: cover;
   object-position: center;
   border-radius: var(--radius-flat);
+  pointer-events: none;
+}
+.outdoor-hero-video::-webkit-media-controls,
+.outdoor-hero-video::-webkit-media-controls-start-playback-button,
+.outdoor-hero-video::-webkit-media-controls-play-button {
+  display: none !important;
+  -webkit-appearance: none;
+  pointer-events: none;
 }
 .outdoor-hero-photo {
   width: 100%;
