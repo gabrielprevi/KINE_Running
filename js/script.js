@@ -836,43 +836,6 @@ if (outdoorVideoEl) {
   outdoorVideoEl.addEventListener('loadeddata', placeOutdoorMask);
 }
 
-// ---------- Respect prefers-reduced-motion on the outdoor hero video ----------
-const outdoorHeroVideo = document.getElementById('outdoorHeroVideo');
-if (outdoorHeroVideo) {
-  const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-  function applyMotionPreference(reduce) {
-    if (reduce) {
-      outdoorHeroVideo.pause();
-      outdoorHeroVideo.removeAttribute('autoplay');
-    } else if (outdoorHeroVideo.paused) {
-      outdoorHeroVideo.play().catch(() => {});
-    }
-  }
-
-  applyMotionPreference(reduceMotionQuery.matches);
-  reduceMotionQuery.addEventListener('change', (e) => applyMotionPreference(e.matches));
-}
-
-const outdoorVideoElHyrox = document.getElementById('outdoorHeroVideoHyrox');
-
-// ---------- Respeita prefers-reduced-motion no vídeo HYROX também ----------
-if (outdoorVideoElHyrox) {
-  const reduceMotionQueryHyrox = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-  function applyMotionPreferenceHyrox(reduce) {
-    if (reduce) {
-      outdoorVideoElHyrox.pause();
-      outdoorVideoElHyrox.removeAttribute('autoplay');
-    } else if (outdoorVideoElHyrox.paused) {
-      outdoorVideoElHyrox.play().catch(() => {});
-    }
-  }
-
-  applyMotionPreferenceHyrox(reduceMotionQueryHyrox.matches);
-  reduceMotionQueryHyrox.addEventListener('change', (e) => applyMotionPreferenceHyrox(e.matches));
-}
-
 // ---------- Custom cursor over product images (desktop only) ----------
 // Gated once at load, not via a live-updating listener: a static test site
 // doesn't need to handle someone plugging in a mouse mid-session, and gating
