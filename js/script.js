@@ -836,6 +836,50 @@ if (outdoorVideoEl) {
   outdoorVideoEl.addEventListener('loadeddata', placeOutdoorMask);
 }
 
+// ---------- Garante que os vídeos de fundo sempre toquem ----------
+// Celular (principalmente com pouca bateria/economia de energia) às vezes
+// ignora o autoplay do HTML silenciosamente. Em vez de confiar só no
+// atributo, forçamos o .play() em vários gatilhos: quando o vídeo entra na
+// tela, quando os dados terminam de carregar, quando a aba volta a ficar
+// visível, e na primeira interação do usuário (toque, scroll ou clique) —
+// assim, mesmo se um navegador específico recusar o autoplay num momento,
+// algum desses gatilhos acaba destravando o vídeo.
+function ensureVideoPlays(video) {
+  if (!video) return;
+  video.muted = true;
+  video.defaultMuted = true;
+
+  const tryPlay = () => {
+    const p = video.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+  };
+
+  tryPlay();
+  video.addEventListener('loadeddata', tryPlay);
+  video.addEventListener('canplay', tryPlay);
+  video.addEventListener('pause', tryPlay);
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) tryPlay();
+      });
+    }, { threshold: 0.1 });
+    observer.observe(video);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) tryPlay();
+  });
+  window.addEventListener('pageshow', tryPlay);
+  ['touchstart', 'scroll', 'click'].forEach((evt) => {
+    window.addEventListener(evt, tryPlay, { once: true, passive: true });
+  });
+}
+
+ensureVideoPlays(document.getElementById('outdoorHeroVideo'));
+ensureVideoPlays(document.getElementById('outdoorHeroVideoHyrox'));
+
 // ---------- Custom cursor over product images (desktop only) ----------
 // Gated once at load, not via a live-updating listener: a static test site
 // doesn't need to handle someone plugging in a mouse mid-session, and gating
