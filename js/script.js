@@ -160,7 +160,7 @@ function renderCart() {
       <div class="cart-drawer__quicklinks">
         <a href="#colecao" class="pill-link">COLEÇÃO ASPHALT</a>
         <a href="#street" class="pill-link">STREETWEAR RUNNER</a>
-        <a href="#manada" class="pill-link">A MANADA</a>
+        <a href="#alcateia" class="pill-link">A ALCATEIA</a>
       </div>`;
     return;
   }
