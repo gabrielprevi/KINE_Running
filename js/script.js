@@ -66,6 +66,7 @@ function openSearch() {
   searchPanel.classList.add('is-open');
   searchInput.focus();
   updateChrome();   // ver nota no fechamento do menu mobile
+  pushOverlayHistory();
 }
 
 function closeSearch() {
@@ -181,6 +182,7 @@ function renderCart() {
     <div class="cart-drawer__footer">
       <div class="cart-drawer__total"><span>Total</span><strong>${formatBRL(cartTotal())}</strong></div>
       <button class="btn btn--solid cart-drawer__checkout" id="checkoutBtn">FINALIZAR COMPRA</button>
+      <button class="btn btn--outline cart-drawer__continue" id="cartContinueBtn">CONTINUAR COMPRANDO</button>
     </div>
   `;
 }
@@ -216,12 +218,17 @@ cartDrawerBody.addEventListener('click', (e) => {
   if (e.target.closest('#checkoutBtn')) {
     closeCart();
     openCheckout();
+    return;
+  }
+  if (e.target.closest('#cartContinueBtn')) {
+    closeCart();
   }
 });
 
 function openCart() {
   cartDrawer.classList.add('is-open');
   drawerBackdrop.classList.add('is-open');
+  pushOverlayHistory();
 }
 
 function closeCart() {
@@ -352,6 +359,7 @@ function openProductView(card) {
 
   productView.classList.add('is-open');
   productBackdrop.classList.add('is-open');
+  pushOverlayHistory();
 }
 
 function closeProductView() {
@@ -426,6 +434,7 @@ function openLightbox() {
   resetLightboxZoom();
   lightbox.classList.add('is-open');
   lightboxBackdrop.classList.add('is-open');
+  pushOverlayHistory();
 }
 
 function closeLightbox() {
@@ -577,6 +586,7 @@ function openCheckout() {
   setPaymentMethod('cartao');
   checkoutView.classList.add('is-open');
   checkoutBackdrop.classList.add('is-open');
+  pushOverlayHistory();
 }
 
 function closeCheckout() {
@@ -654,6 +664,27 @@ checkoutForm.addEventListener('submit', (e) => {
 // ---------- Close open overlay with Escape ----------
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
+  if (lightbox.classList.contains('is-open')) closeLightbox();
+  else if (checkoutView.classList.contains('is-open')) closeCheckout();
+  else if (productView.classList.contains('is-open')) closeProductView();
+  else if (cartDrawer.classList.contains('is-open')) closeCart();
+  else if (searchPanel.classList.contains('is-open')) closeSearch();
+  else if (newsletterModal.classList.contains('is-open')) closeNewsletterModal();
+});
+
+// ---------- Botão/gesto "voltar" do navegador fecha overlays, sem sair do site ----------
+// Sem isso, abrir um painel (carrinho, produto, checkout, busca, newsletter,
+// lightbox) não deixa nenhum rastro no histórico do navegador — então o gesto
+// de voltar do iOS/Android (ou o botão voltar do navegador) simplesmente sai
+// do site com o painel aberto, em vez de só fechá-lo. Cada função "open" acima
+// empurra uma entrada no histórico (pushOverlayHistory, abaixo); ao voltar,
+// fechamos o painel em vez de deixar o navegador navegar embora — o carrinho
+// e o produto continuam exatamente como estavam.
+function pushOverlayHistory() {
+  history.pushState({ kineOverlay: true }, '', location.href);
+}
+
+window.addEventListener('popstate', () => {
   if (lightbox.classList.contains('is-open')) closeLightbox();
   else if (checkoutView.classList.contains('is-open')) closeCheckout();
   else if (productView.classList.contains('is-open')) closeProductView();
@@ -935,6 +966,7 @@ function openNewsletterModal() {
   if (anyOpen) return;
   newsletterModal.classList.add('is-open');
   newsletterBackdrop.classList.add('is-open');
+  pushOverlayHistory();
 }
 
 function closeNewsletterModal() {
