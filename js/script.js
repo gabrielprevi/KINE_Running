@@ -950,12 +950,32 @@ if (customCursor && window.matchMedia('(hover: hover) and (pointer: fine)').matc
   });
 }
 
-// ---------- Newsletter popup (aparece uma vez, depois de 4s) ----------
+// ---------- Telefone BR (WhatsApp): máscara e validação ----------
+function formatPhoneBR(value) {
+  let d = value.replace(/\D/g, '');
+  if (d.length > 11 && d.startsWith('55')) d = d.slice(2);
+  d = d.slice(0, 11);
+  if (d.length === 0) return '';
+  if (d.length <= 2) return '(' + d;
+  if (d.length <= 6) return '(' + d.slice(0, 2) + ') ' + d.slice(2);
+  if (d.length <= 10) return '(' + d.slice(0, 2) + ') ' + d.slice(2, 6) + '-' + d.slice(6);
+  return '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7);
+}
+
+function isValidWhatsappBR(value) {
+  const d = value.replace(/\D/g, '');
+  return /^[1-9][1-9]9\d{8}$/.test(d);
+}
+
+// ---------- Newsletter popup (aparece uma vez, depois de 2s) ----------
 const newsletterBackdrop = document.getElementById('newsletterBackdrop');
 const newsletterModal = document.getElementById('newsletterModal');
 const newsletterModalClose = document.getElementById('newsletterModalClose');
 const newsletterModalForm = document.getElementById('newsletterModalForm');
 const newsletterModalSuccess = document.getElementById('newsletterModalSuccess');
+const newsletterModalPhone = document.getElementById('newsletterModalPhone');
+const newsletterModalConsent = document.getElementById('newsletterModalConsent');
+const newsletterModalError = document.getElementById('newsletterModalError');
 const NEWSLETTER_KEY = 'kineNewsletterDismissed';
 
 function openNewsletterModal() {
@@ -976,14 +996,63 @@ function closeNewsletterModal() {
   try { localStorage.setItem(NEWSLETTER_KEY, '1'); } catch (e) {}
 }
 
+function showNewsletterError(message) {
+  newsletterModalError.textContent = message;
+  newsletterModalError.hidden = false;
+  newsletterModal.classList.add('has-error');
+}
+
+function clearNewsletterError() {
+  newsletterModalError.hidden = true;
+  newsletterModal.classList.remove('has-error');
+}
+
 if (newsletterModal) {
   setTimeout(openNewsletterModal, 2000);
   newsletterModalClose.addEventListener('click', closeNewsletterModal);
   newsletterBackdrop.addEventListener('click', closeNewsletterModal);
+  newsletterModalPhone.addEventListener('input', () => {
+    newsletterModalPhone.value = formatPhoneBR(newsletterModalPhone.value);
+    clearNewsletterError();
+  });
+  newsletterModalConsent.addEventListener('change', clearNewsletterError);
   newsletterModalForm.addEventListener('submit', (e) => {
     e.preventDefault();
+    if (!isValidWhatsappBR(newsletterModalPhone.value)) {
+      showNewsletterError('Digite um WhatsApp válido com DDD.');
+      newsletterModalPhone.focus();
+      return;
+    }
+    if (!newsletterModalConsent.checked) {
+      showNewsletterError('Marque a caixinha para autorizar o envio.');
+      return;
+    }
+    clearNewsletterError();
     newsletterModalForm.hidden = true;
     newsletterModalSuccess.hidden = false;
     try { localStorage.setItem(NEWSLETTER_KEY, '1'); } catch (e) {}
+  });
+}
+
+// ---------- Newsletter do rodapé (WhatsApp) ----------
+const footerNewsletterForm = document.getElementById('footerNewsletterForm');
+const footerNewsletterPhone = document.getElementById('footerNewsletterPhone');
+const footerNewsletterNote = document.getElementById('footerNewsletterNote');
+
+if (footerNewsletterForm) {
+  const footerNoteDefault = footerNewsletterNote.textContent;
+  footerNewsletterPhone.addEventListener('input', () => {
+    footerNewsletterPhone.value = formatPhoneBR(footerNewsletterPhone.value);
+    footerNewsletterNote.textContent = footerNoteDefault;
+  });
+  footerNewsletterForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!isValidWhatsappBR(footerNewsletterPhone.value)) {
+      footerNewsletterNote.textContent = 'Digite um WhatsApp válido com DDD.';
+      footerNewsletterPhone.focus();
+      return;
+    }
+    footerNewsletterForm.hidden = true;
+    footerNewsletterNote.textContent = 'Boa. Você está na lista (simulado) — site de demonstração, nenhuma mensagem foi enviada de verdade.';
   });
 }
