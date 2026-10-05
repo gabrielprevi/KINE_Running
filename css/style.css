@@ -2158,7 +2158,7 @@ h1, h2, h3, h4 {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: var(--space-3);
+  gap: 20px;
   min-width: 0;
 }
 .newsletter-modal__content h2 {
@@ -2177,6 +2177,7 @@ h1, h2, h3, h4 {
   gap: var(--element-gap);
   margin-top: var(--space-2);
 }
+.newsletter-modal__form input[type="email"],
 .newsletter-modal__form input[type="tel"] {
   flex: 1;
   min-width: 0;
@@ -2189,6 +2190,7 @@ h1, h2, h3, h4 {
 }
 .newsletter-modal__form[hidden] { display: none; }
 .newsletter-modal__form input::placeholder { color: var(--ink-dim); }
+.newsletter-modal__form .btn { flex-basis: 100%; }
 .newsletter-modal__consent {
   flex-basis: 100%;
   display: flex;
@@ -2236,6 +2238,7 @@ h1, h2, h3, h4 {
   .newsletter-modal__content h2 { font-size: 30px; line-height: 1.1; }
   .newsletter-modal__form { flex-direction: column; flex-wrap: nowrap; align-items: stretch; margin-top: 0; }
   .newsletter-modal__form input { flex: none; }
+  .newsletter-modal__form .btn { flex-basis: auto; }
   .newsletter-modal__consent,
   .newsletter-modal__form .newsletter-modal__error { flex-basis: auto; }
   .newsletter-modal__content .newsletter-modal__fine { margin-top: 0; }
@@ -2248,4 +2251,7 @@ h1, h2, h3, h4 {
   .newsletter-modal__content p { font-size: 14px; line-height: 1.45; }
   .newsletter-modal__content .newsletter-modal__success { font-size: 14px; }
   .newsletter-modal__form { gap: 10px; }
+}
+@media (max-width: 719px) and (max-height: 640px) {
+  .newsletter-modal__content .newsletter-modal__fine { display: none; }
 }

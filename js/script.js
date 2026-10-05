@@ -950,7 +950,11 @@ if (customCursor && window.matchMedia('(hover: hover) and (pointer: fine)').matc
   });
 }
 
-// ---------- Telefone BR (WhatsApp): máscara e validação ----------
+// ---------- Validação de contato: e-mail e WhatsApp BR (ambos obrigatórios) ----------
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim());
+}
+
 function formatPhoneBR(value) {
   let d = value.replace(/\D/g, '');
   if (d.length > 11 && d.startsWith('55')) d = d.slice(2);
@@ -973,6 +977,7 @@ const newsletterModal = document.getElementById('newsletterModal');
 const newsletterModalClose = document.getElementById('newsletterModalClose');
 const newsletterModalForm = document.getElementById('newsletterModalForm');
 const newsletterModalSuccess = document.getElementById('newsletterModalSuccess');
+const newsletterModalEmail = document.getElementById('newsletterModalEmail');
 const newsletterModalPhone = document.getElementById('newsletterModalPhone');
 const newsletterModalConsent = document.getElementById('newsletterModalConsent');
 const newsletterModalError = document.getElementById('newsletterModalError');
@@ -1011,6 +1016,7 @@ if (newsletterModal) {
   setTimeout(openNewsletterModal, 2000);
   newsletterModalClose.addEventListener('click', closeNewsletterModal);
   newsletterBackdrop.addEventListener('click', closeNewsletterModal);
+  newsletterModalEmail.addEventListener('input', clearNewsletterError);
   newsletterModalPhone.addEventListener('input', () => {
     newsletterModalPhone.value = formatPhoneBR(newsletterModalPhone.value);
     clearNewsletterError();
@@ -1018,6 +1024,11 @@ if (newsletterModal) {
   newsletterModalConsent.addEventListener('change', clearNewsletterError);
   newsletterModalForm.addEventListener('submit', (e) => {
     e.preventDefault();
+    if (!isValidEmail(newsletterModalEmail.value)) {
+      showNewsletterError('Digite um e-mail válido.');
+      newsletterModalEmail.focus();
+      return;
+    }
     if (!isValidWhatsappBR(newsletterModalPhone.value)) {
       showNewsletterError('Digite um WhatsApp válido com DDD.');
       newsletterModalPhone.focus();
@@ -1034,25 +1045,24 @@ if (newsletterModal) {
   });
 }
 
-// ---------- Newsletter do rodapé (WhatsApp) ----------
+// ---------- Newsletter do rodapé (e-mail) ----------
 const footerNewsletterForm = document.getElementById('footerNewsletterForm');
-const footerNewsletterPhone = document.getElementById('footerNewsletterPhone');
+const footerNewsletterEmail = document.getElementById('footerNewsletterEmail');
 const footerNewsletterNote = document.getElementById('footerNewsletterNote');
 
 if (footerNewsletterForm) {
   const footerNoteDefault = footerNewsletterNote.textContent;
-  footerNewsletterPhone.addEventListener('input', () => {
-    footerNewsletterPhone.value = formatPhoneBR(footerNewsletterPhone.value);
+  footerNewsletterEmail.addEventListener('input', () => {
     footerNewsletterNote.textContent = footerNoteDefault;
   });
   footerNewsletterForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    if (!isValidWhatsappBR(footerNewsletterPhone.value)) {
-      footerNewsletterNote.textContent = 'Digite um WhatsApp válido com DDD.';
-      footerNewsletterPhone.focus();
+    if (!isValidEmail(footerNewsletterEmail.value)) {
+      footerNewsletterNote.textContent = 'Digite um e-mail válido.';
+      footerNewsletterEmail.focus();
       return;
     }
     footerNewsletterForm.hidden = true;
-    footerNewsletterNote.textContent = 'Boa. Você está na lista (simulado) — site de demonstração, nenhuma mensagem foi enviada de verdade.';
+    footerNewsletterNote.textContent = 'Boa. Você está na lista (simulado) — site de demonstração, nenhum e-mail foi enviado de verdade.';
   });
 }
