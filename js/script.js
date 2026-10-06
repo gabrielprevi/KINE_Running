@@ -971,6 +971,31 @@ function isValidWhatsappBR(value) {
   return /^[1-9][1-9]9\d{8}$/.test(d);
 }
 
+// ---------- Envio dos cadastros para a API (api/lead.js) ----------
+// Devolve { ok: true } ou { ok: false, error: <código da API> }. Erro de rede
+// ou resposta que não seja JSON vira { ok: false, error: 'network' }.
+async function postLead(payload) {
+  try {
+    const response = await fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json();
+    if (data && data.ok === true) return { ok: true };
+    return { ok: false, error: data && typeof data.error === 'string' ? data.error : 'server_error' };
+  } catch (err) {
+    return { ok: false, error: 'network' };
+  }
+}
+
+function leadErrorMessage(code) {
+  if (code === 'invalid_email') return 'Digite um e-mail válido.';
+  if (code === 'invalid_whatsapp') return 'Digite um WhatsApp válido com DDD.';
+  if (code === 'consent_required') return 'Marque a caixinha para autorizar o envio.';
+  return 'Não foi possível cadastrar agora. Tente de novo em instantes.';
+}
+
 // ---------- Newsletter popup (aparece uma vez, depois de 2s) ----------
 const newsletterBackdrop = document.getElementById('newsletterBackdrop');
 const newsletterModal = document.getElementById('newsletterModal');
@@ -1022,8 +1047,12 @@ if (newsletterModal) {
     clearNewsletterError();
   });
   newsletterModalConsent.addEventListener('change', clearNewsletterError);
-  newsletterModalForm.addEventListener('submit', (e) => {
+  const newsletterModalSubmitBtn = newsletterModalForm.querySelector('button[type="submit"]');
+  const newsletterModalSubmitLabel = newsletterModalSubmitBtn.textContent;
+  let newsletterModalSending = false;
+  newsletterModalForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (newsletterModalSending) return;
     if (!isValidEmail(newsletterModalEmail.value)) {
       showNewsletterError('Digite um e-mail válido.');
       newsletterModalEmail.focus();
@@ -1039,9 +1068,27 @@ if (newsletterModal) {
       return;
     }
     clearNewsletterError();
-    newsletterModalForm.hidden = true;
-    newsletterModalSuccess.hidden = false;
-    try { localStorage.setItem(NEWSLETTER_KEY, '1'); } catch (e) {}
+
+    newsletterModalSending = true;
+    newsletterModalSubmitBtn.disabled = true;
+    newsletterModalSubmitBtn.textContent = 'ENVIANDO...';
+    const result = await postLead({
+      email: newsletterModalEmail.value.trim(),
+      whatsapp: newsletterModalPhone.value,
+      source: 'popup',
+      consent: true
+    });
+    newsletterModalSending = false;
+
+    if (result.ok) {
+      newsletterModalForm.hidden = true;
+      newsletterModalSuccess.hidden = false;
+      try { localStorage.setItem(NEWSLETTER_KEY, '1'); } catch (err) {}
+      return;
+    }
+    showNewsletterError(leadErrorMessage(result.error));
+    newsletterModalSubmitBtn.disabled = false;
+    newsletterModalSubmitBtn.textContent = newsletterModalSubmitLabel;
   });
 }
 
@@ -1055,14 +1102,34 @@ if (footerNewsletterForm) {
   footerNewsletterEmail.addEventListener('input', () => {
     footerNewsletterNote.textContent = footerNoteDefault;
   });
-  footerNewsletterForm.addEventListener('submit', (e) => {
+  const footerNewsletterSubmitBtn = footerNewsletterForm.querySelector('button[type="submit"]');
+  let footerNewsletterSending = false;
+  footerNewsletterForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (footerNewsletterSending) return;
     if (!isValidEmail(footerNewsletterEmail.value)) {
       footerNewsletterNote.textContent = 'Digite um e-mail válido.';
       footerNewsletterEmail.focus();
       return;
     }
-    footerNewsletterForm.hidden = true;
-    footerNewsletterNote.textContent = 'Boa. Você está na lista (simulado) — site de demonstração, nenhum e-mail foi enviado de verdade.';
+
+    footerNewsletterSending = true;
+    footerNewsletterSubmitBtn.disabled = true;
+    footerNewsletterEmail.disabled = true;
+    const result = await postLead({
+      email: footerNewsletterEmail.value.trim(),
+      source: 'rodape',
+      consent: true
+    });
+    footerNewsletterSending = false;
+
+    if (result.ok) {
+      footerNewsletterForm.hidden = true;
+      footerNewsletterNote.textContent = 'Boa. Você está na lista! Em breve chegam as novidades da KINE por e-mail.';
+      return;
+    }
+    footerNewsletterNote.textContent = 'Não foi possível cadastrar agora. Tente de novo em instantes.';
+    footerNewsletterSubmitBtn.disabled = false;
+    footerNewsletterEmail.disabled = false;
   });
 }

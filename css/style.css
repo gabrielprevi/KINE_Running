@@ -1945,6 +1945,10 @@ h1, h2, h3, h4 {
   transition: opacity var(--dur-micro) ease;
 }
 .newsletter button:hover { opacity: 0.45; }
+.newsletter button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .newsletter[hidden] { display: none; }
 .newsletter-block { min-width: 280px; }
 .newsletter__note {
@@ -2191,6 +2195,10 @@ h1, h2, h3, h4 {
 .newsletter-modal__form[hidden] { display: none; }
 .newsletter-modal__form input::placeholder { color: var(--ink-dim); }
 .newsletter-modal__form .btn { flex-basis: 100%; }
+.newsletter-modal__form .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .newsletter-modal__consent {
   flex-basis: 100%;
   display: flex;
