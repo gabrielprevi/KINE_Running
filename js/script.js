@@ -643,22 +643,136 @@ checkoutForm.addEventListener('input', (e) => {
   if (e.target.id === 'cardExpiry') {
     e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4).replace(/(\d{2})(?=\d)/, '$1/');
   }
+  if (e.target.name === 'whatsapp') {
+    e.target.value = formatPhoneBR(e.target.value);
+  }
+  if (e.target.name === 'cep') {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+    e.target.value = digits.length > 5 ? digits.slice(0, 5) + '-' + digits.slice(5) : digits;
+  }
+  const checkoutErrorEl = checkoutForm.querySelector('#checkoutError');
+  if (checkoutErrorEl) checkoutErrorEl.hidden = true;
 });
 
 const PAYMENT_METHOD_LABELS = { cartao: 'cartão de crédito', pix: 'PIX', boleto: 'boleto' };
 
-checkoutForm.addEventListener('submit', (e) => {
+// Envia o pedido para api/order.js. Devolve { ok: true, orderNumber } ou
+// { ok: false, error: <código da API> }. Erro de rede ou resposta que não seja
+// JSON vira { ok: false, error: 'network' }.
+async function postOrder(payload) {
+  try {
+    const response = await fetch('/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json();
+    if (data && data.ok === true) return { ok: true, orderNumber: data.orderNumber };
+    return { ok: false, error: data && typeof data.error === 'string' ? data.error : 'server_error' };
+  } catch (err) {
+    return { ok: false, error: 'network' };
+  }
+}
+
+function orderErrorMessage(code) {
+  if (code === 'invalid_name') return 'Informe seu nome completo.';
+  if (code === 'invalid_email') return 'Digite um e-mail válido.';
+  if (code === 'invalid_whatsapp') return 'Digite um WhatsApp válido com DDD.';
+  if (code === 'invalid_address') return 'Informe o endereço.';
+  if (code === 'invalid_city') return 'Informe a cidade.';
+  if (code === 'invalid_zip') return 'Digite um CEP válido (8 números).';
+  if (code === 'invalid_items') return 'Não foi possível validar os itens do carrinho. Revise o carrinho e tente de novo.';
+  return 'Não foi possível registrar o pedido agora. Tente de novo em instantes.';
+}
+
+let checkoutSending = false;
+
+checkoutForm.addEventListener('submit', async (e) => {
   e.preventDefault();
+  if (checkoutSending) return;
+
+  // O innerHTML do formulário é refeito a cada abertura: estes elementos são
+  // buscados agora, no momento do envio.
+  const errorEl = checkoutForm.querySelector('#checkoutError');
+  const submitBtn = checkoutForm.querySelector('button[type="submit"]');
+  const showError = (message, field) => {
+    if (errorEl) {
+      errorEl.textContent = message;
+      errorEl.hidden = false;
+    }
+    if (field) field.focus();
+  };
+
+  if (cart.length === 0) {
+    showError('Seu carrinho está vazio.');
+    return;
+  }
+
+  const emailField = checkoutForm.elements['email'];
+  const whatsappField = checkoutForm.elements['whatsapp'];
+  const cepField = checkoutForm.elements['cep'];
+
+  if (!isValidEmail(emailField.value)) {
+    showError('Digite um e-mail válido.', emailField);
+    return;
+  }
+  if (!isValidWhatsappBR(whatsappField.value)) {
+    showError('Digite um WhatsApp válido com DDD.', whatsappField);
+    return;
+  }
+  const zipDigits = cepField.value.replace(/\D/g, '');
+  if (zipDigits.length !== 8) {
+    showError('Digite um CEP válido (8 números).', cepField);
+    return;
+  }
 
   const activeTab = checkoutForm.querySelector('.payment-tab.is-active');
-  const methodLabel = PAYMENT_METHOD_LABELS[activeTab ? activeTab.dataset.method : 'cartao'];
+  const paymentMethod = activeTab ? activeTab.dataset.method : 'cartao';
+  const methodLabel = PAYMENT_METHOD_LABELS[paymentMethod];
+  const installmentsField = checkoutForm.elements['installments'];
 
-  checkoutForm.innerHTML = `
-    <div class="checkout-form__success">
-      <h3>Pedido de teste confirmado</h3>
-      <p>Pagamento simulado via ${methodLabel} — nenhuma cobrança real foi processada, isso é um site de demonstração.</p>
-    </div>
-  `;
+  // Payload montado campo a campo: nada de dados de cartão sai do navegador.
+  const payload = {
+    name: checkoutForm.elements['nome'].value.trim(),
+    email: emailField.value.trim(),
+    whatsapp: whatsappField.value,
+    address: checkoutForm.elements['endereco'].value.trim(),
+    city: checkoutForm.elements['cidade'].value.trim(),
+    zip: zipDigits,
+    paymentMethod,
+    installments: paymentMethod === 'cartao' && installmentsField ? Number(installmentsField.value) : 1,
+    items: cart.map((item) => ({
+      id: item.id,
+      name: item.name,
+      size: item.size,
+      color: item.color,
+      quantity: item.qty,
+      price: item.price
+    }))
+  };
+
+  checkoutSending = true;
+  const submitLabel = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'ENVIANDO...';
+  const result = await postOrder(payload);
+  checkoutSending = false;
+
+  if (result.ok) {
+    cart.length = 0;
+    renderCart();
+    checkoutForm.innerHTML = `
+      <div class="checkout-form__success">
+        <h3>Pedido nº ${Number(result.orderNumber)} registrado</h3>
+        <p>Pagamento simulado via ${methodLabel} — nenhuma cobrança real foi processada, isso é um site de demonstração.</p>
+      </div>
+    `;
+    return;
+  }
+
+  showError(orderErrorMessage(result.error));
+  submitBtn.disabled = false;
+  submitBtn.textContent = submitLabel;
 });
 
 // ---------- Close open overlay with Escape ----------

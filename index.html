@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Raleway:wght@400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=20261006a">
+<link rel="stylesheet" href="css/style.css?v=20261006b">
 </head>
 <body>
 
@@ -178,6 +178,14 @@
       <label>Nome completo
         <input type="text" name="nome" required>
       </label>
+      <div class="checkout-form__row">
+        <label>E-mail
+          <input type="email" name="email" autocomplete="email" placeholder="seu@email.com" required>
+        </label>
+        <label>WhatsApp
+          <input type="tel" name="whatsapp" inputmode="numeric" autocomplete="tel-national" placeholder="(11) 91234-5678" maxlength="15" required>
+        </label>
+      </div>
       <label>Endereço
         <input type="text" name="endereco" required>
       </label>
@@ -186,7 +194,7 @@
           <input type="text" name="cidade" required>
         </label>
         <label>CEP
-          <input type="text" name="cep" required>
+          <input type="text" name="cep" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" maxlength="9" required>
         </label>
       </div>
 
@@ -235,8 +243,10 @@
         </div>
       </div>
 
+      <p class="checkout-form__error" id="checkoutError" role="alert" hidden></p>
       <button type="submit" class="btn btn--solid">CONFIRMAR PEDIDO (TESTE)</button>
       <p class="checkout-form__note">Site de teste — nenhum pagamento real será processado.</p>
+      <p class="checkout-form__note">Seus dados de contato e entrega são salvos apenas para processar e entregar o pedido.</p>
     </form>
   </div>
 </div>
@@ -463,7 +473,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="js/script.js?v=20261006a"></script>
+<script src="js/script.js?v=20261006b"></script>
 <script src="js/cinematic.js?v=20260917b"></script>
 </body>
 </html>

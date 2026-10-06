@@ -1311,6 +1311,17 @@ h1, h2, h3, h4 {
   line-height: var(--lh-caption);
   color: var(--ink-dim);
 }
+.checkout-form__error {
+  margin: 0;
+  font-size: var(--text-caption);
+  line-height: 1.4;
+  color: var(--color-brand-pink);
+}
+.checkout-form__error[hidden] { display: none; }
+.checkout-form .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .checkout-form__success {
   padding: var(--space-4) 0;
 }
