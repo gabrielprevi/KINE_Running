@@ -581,6 +581,9 @@ function setPaymentMethod(method) {
 
 function openCheckout() {
   checkoutForm.innerHTML = checkoutFormOriginalHTML;
+  cepLastRequested.cep = '';
+  cepLastRequested.payerCep = '';
+  syncPayerFields();
   renderCheckout();
   populateInstallments();
   setPaymentMethod('cartao');
@@ -646,13 +649,181 @@ checkoutForm.addEventListener('input', (e) => {
   if (e.target.name === 'whatsapp') {
     e.target.value = formatPhoneBR(e.target.value);
   }
-  if (e.target.name === 'cep') {
+  if (e.target.name === 'cpf' || e.target.name === 'payerCpf') {
+    e.target.value = formatCPF(e.target.value);
+  }
+  if (e.target.name === 'uf' || e.target.name === 'payerUf') {
+    e.target.value = e.target.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 2);
+  }
+  const cepBlock = cepBlockFor(e.target.name);
+  if (cepBlock) {
     const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
     e.target.value = digits.length > 5 ? digits.slice(0, 5) + '-' + digits.slice(5) : digits;
+    if (digits.length === 8) {
+      runCepLookup(cepBlock, digits).catch(() => {});
+    } else {
+      // CEP incompleto: o endereço que veio de um CEP anterior não vale mais.
+      cepLastRequested[cepBlock.cep] = '';
+      resetAddressFields(cepBlock);
+      setCepStatus(cepBlock, '');
+    }
   }
   const checkoutErrorEl = checkoutForm.querySelector('#checkoutError');
   if (checkoutErrorEl) checkoutErrorEl.hidden = true;
 });
+
+// Caixinha "mesmos dados da entrega": mostra ou esconde os dados do pagador.
+checkoutForm.addEventListener('change', (e) => {
+  if (e.target.id === 'payerSame') syncPayerFields();
+});
+
+// ---------- CPF e endereço por CEP (checkout) ----------
+const BR_STATES = [
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA',
+  'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+];
+
+// 000.000.000-00 enquanto digita.
+function formatCPF(value) {
+  const d = value.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 6) return d.slice(0, 3) + '.' + d.slice(3);
+  if (d.length <= 9) return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6);
+  return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9);
+}
+
+// 11 dígitos, não pode ser sequência de dígitos iguais, e os dois dígitos
+// verificadores (módulo 11) precisam bater.
+function isValidCPF(value) {
+  const d = String(value).replace(/\D/g, '');
+  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+  const checkDigit = (length) => {
+    let sum = 0;
+    for (let i = 0; i < length; i++) sum += Number(d[i]) * (length + 1 - i);
+    const rest = (sum * 10) % 11;
+    return rest === 10 ? 0 : rest;
+  };
+  return checkDigit(9) === Number(d[9]) && checkDigit(10) === Number(d[10]);
+}
+
+// Consulta o ViaCEP. Devolve { status: 'ok', street, neighborhood, city, state },
+// { status: 'notfound' } (CEP que não existe) ou { status: 'fail' } (HTTP diferente
+// de 200, rede, timeout ou resposta que não seja JSON).
+async function lookupCEP(cep8) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 6000);
+  try {
+    const response = await fetch('https://viacep.com.br/ws/' + cep8 + '/json/', { signal: controller.signal });
+    if (response.status !== 200) return { status: 'fail' };
+    const data = await response.json();
+    if (data === null || typeof data !== 'object') return { status: 'fail' };
+    if (data.erro === true || data.erro === 'true') return { status: 'notfound' };
+    const text = (v) => (typeof v === 'string' ? v.trim() : '');
+    return {
+      status: 'ok',
+      street: text(data.logradouro),
+      neighborhood: text(data.bairro),
+      city: text(data.localidade),
+      state: text(data.uf).toUpperCase()
+    };
+  } catch (err) {
+    return { status: 'fail' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Os dois blocos de endereço do formulário: entrega e cobrança (pagador).
+const CEP_BLOCKS = [
+  { cep: 'cep', street: 'rua', number: 'numero', neighborhood: 'bairro', city: 'cidade', state: 'uf', status: 'cepStatus' },
+  { cep: 'payerCep', street: 'payerRua', number: 'payerNumero', neighborhood: 'payerBairro', city: 'payerCidade', state: 'payerUf', status: 'payerCepStatus' }
+];
+// Último CEP consultado em cada bloco, para ignorar respostas antigas.
+const cepLastRequested = { cep: '', payerCep: '' };
+
+function cepBlockFor(fieldName) {
+  return CEP_BLOCKS.find((block) => block.cep === fieldName) || null;
+}
+
+function addressFields(block) {
+  return [block.street, block.neighborhood, block.city, block.state]
+    .map((name) => checkoutForm.elements[name])
+    .filter(Boolean);
+}
+
+// Esvazia rua, bairro, cidade e UF e volta a travá-los (preenchidos só pelo CEP).
+function resetAddressFields(block) {
+  addressFields(block).forEach((field) => {
+    field.value = '';
+    field.readOnly = true;
+  });
+}
+
+function setCepStatus(block, message, isError) {
+  const el = checkoutForm.querySelector('#' + block.status);
+  if (!el) return;
+  el.textContent = message || '';
+  el.hidden = !message;
+  el.classList.toggle('is-error', !!message && !!isError);
+}
+
+async function runCepLookup(block, digits) {
+  cepLastRequested[block.cep] = digits;
+  resetAddressFields(block);
+  setCepStatus(block, 'Buscando endereço...');
+
+  const result = await lookupCEP(digits);
+
+  // Resposta antiga: o CEP mudou, ou o formulário foi refeito, durante a busca.
+  const cepField = checkoutForm.elements[block.cep];
+  if (cepLastRequested[block.cep] !== digits || !cepField || cepField.value.replace(/\D/g, '') !== digits) return;
+
+  if (result.status === 'ok') {
+    const values = {
+      [block.street]: result.street,
+      [block.neighborhood]: result.neighborhood,
+      [block.city]: result.city,
+      [block.state]: result.state
+    };
+    let missing = false;
+    Object.keys(values).forEach((name) => {
+      const field = checkoutForm.elements[name];
+      field.value = values[name];
+      // Só os campos que vieram vazios (CEP único de cidade pequena) ficam livres.
+      field.readOnly = values[name] !== '';
+      if (values[name] === '') missing = true;
+    });
+    setCepStatus(block, missing ? 'Complete o endereço que faltou.' : '');
+    const numberField = checkoutForm.elements[block.number];
+    if (numberField && !numberField.disabled) numberField.focus();
+    return;
+  }
+
+  addressFields(block).forEach((field) => {
+    field.value = '';
+    field.readOnly = false;
+  });
+  setCepStatus(
+    block,
+    result.status === 'notfound'
+      ? 'CEP não encontrado. Confira os números ou preencha o endereço manualmente.'
+      : 'Não foi possível buscar o CEP agora. Preencha o endereço manualmente.',
+    true
+  );
+}
+
+// Dados de quem vai pagar: visíveis e obrigatórios só quando a caixinha está desmarcada.
+function syncPayerFields() {
+  const same = checkoutForm.querySelector('#payerSame');
+  const box = checkoutForm.querySelector('#payerFields');
+  if (!same || !box) return;
+  const showPayer = !same.checked;
+  box.hidden = !showPayer;
+  box.querySelectorAll('input').forEach((input) => {
+    input.disabled = !showPayer;
+    input.required = showPayer && input.name !== 'payerComplemento';
+  });
+}
 
 const PAYMENT_METHOD_LABELS = { cartao: 'cartão de crédito', pix: 'PIX', boleto: 'boleto' };
 
@@ -678,9 +849,19 @@ function orderErrorMessage(code) {
   if (code === 'invalid_name') return 'Informe seu nome completo.';
   if (code === 'invalid_email') return 'Digite um e-mail válido.';
   if (code === 'invalid_whatsapp') return 'Digite um WhatsApp válido com DDD.';
+  if (code === 'invalid_cpf') return 'Digite um CPF válido.';
   if (code === 'invalid_address') return 'Informe o endereço.';
-  if (code === 'invalid_city') return 'Informe a cidade.';
   if (code === 'invalid_zip') return 'Digite um CEP válido (8 números).';
+  if (code === 'invalid_street') return 'Informe a rua.';
+  if (code === 'invalid_number') return 'Informe o número.';
+  if (code === 'invalid_neighborhood') return 'Informe o bairro.';
+  if (code === 'invalid_city') return 'Informe a cidade.';
+  if (code === 'invalid_state') return 'Informe um estado (UF) válido.';
+  if (code === 'invalid_complement' || code === 'invalid_reference') return 'Complemento ou referência muito longos.';
+  if (code === 'invalid_payer_name') return 'Informe o nome de quem vai pagar.';
+  if (code === 'invalid_payer_cpf') return 'Digite um CPF válido para o pagador.';
+  if (code === 'invalid_payer_email') return 'Digite um e-mail válido para o pagador.';
+  if (code === 'invalid_payer_address') return 'Complete o endereço de cobrança.';
   if (code === 'invalid_items') return 'Não foi possível validar os itens do carrinho. Revise o carrinho e tente de novo.';
   return 'Não foi possível registrar o pedido agora. Tente de novo em instantes.';
 }
@@ -708,22 +889,72 @@ checkoutForm.addEventListener('submit', async (e) => {
     return;
   }
 
-  const emailField = checkoutForm.elements['email'];
-  const whatsappField = checkoutForm.elements['whatsapp'];
-  const cepField = checkoutForm.elements['cep'];
+  const field = (name) => checkoutForm.elements[name];
+  const value = (name) => field(name).value.trim();
+  const digitsOf = (name) => field(name).value.replace(/\D/g, '');
+  const payerSameBox = checkoutForm.querySelector('#payerSame');
+  const payerSame = !payerSameBox || payerSameBox.checked;
 
-  if (!isValidEmail(emailField.value)) {
-    showError('Digite um e-mail válido.', emailField);
+  // Onde pôr o foco quando falta endereço: o primeiro campo vazio, se ele puder
+  // ser digitado; se estiver travado (readonly), o CEP, que é quem preenche.
+  const addressGapField = (block) => {
+    const emptyName = [block.street, block.neighborhood, block.city, block.state].find((name) => !value(name));
+    return emptyName && !field(emptyName).readOnly ? field(emptyName) : field(block.cep);
+  };
+
+  if (!isValidEmail(field('email').value)) {
+    showError('Digite um e-mail válido.', field('email'));
     return;
   }
-  if (!isValidWhatsappBR(whatsappField.value)) {
-    showError('Digite um WhatsApp válido com DDD.', whatsappField);
+  if (!isValidWhatsappBR(field('whatsapp').value)) {
+    showError('Digite um WhatsApp válido com DDD.', field('whatsapp'));
     return;
   }
-  const zipDigits = cepField.value.replace(/\D/g, '');
+  if (!isValidCPF(field('cpf').value)) {
+    showError('Digite um CPF válido.', field('cpf'));
+    return;
+  }
+  const zipDigits = digitsOf('cep');
   if (zipDigits.length !== 8) {
-    showError('Digite um CEP válido (8 números).', cepField);
+    showError('Digite um CEP válido (8 números).', field('cep'));
     return;
+  }
+  if (!value('rua') || !value('bairro') || !value('cidade') || !value('uf')) {
+    showError('Digite o CEP para preencher o endereço.', addressGapField(CEP_BLOCKS[0]));
+    return;
+  }
+  const state = value('uf').toUpperCase();
+  if (!BR_STATES.includes(state)) {
+    showError('Informe um estado (UF) válido.', field('uf'));
+    return;
+  }
+  if (!value('numero')) {
+    showError('Informe o número.', field('numero'));
+    return;
+  }
+
+  if (!payerSame) {
+    if (value('payerNome').length < 2) {
+      showError('Informe o nome de quem vai pagar.', field('payerNome'));
+      return;
+    }
+    if (!isValidCPF(field('payerCpf').value)) {
+      showError('Digite um CPF válido para o pagador.', field('payerCpf'));
+      return;
+    }
+    if (!isValidEmail(field('payerEmail').value)) {
+      showError('Digite um e-mail válido para o pagador.', field('payerEmail'));
+      return;
+    }
+    let billingGap = null;
+    if (digitsOf('payerCep').length !== 8) billingGap = field('payerCep');
+    else if (!value('payerRua') || !value('payerBairro') || !value('payerCidade') || !value('payerUf')) billingGap = addressGapField(CEP_BLOCKS[1]);
+    else if (!BR_STATES.includes(value('payerUf').toUpperCase())) billingGap = field('payerUf');
+    else if (!value('payerNumero')) billingGap = field('payerNumero');
+    if (billingGap) {
+      showError('Complete o endereço de cobrança.', billingGap);
+      return;
+    }
   }
 
   const activeTab = checkoutForm.querySelector('.payment-tab.is-active');
@@ -733,12 +964,38 @@ checkoutForm.addEventListener('submit', async (e) => {
 
   // Payload montado campo a campo: nada de dados de cartão sai do navegador.
   const payload = {
-    name: checkoutForm.elements['nome'].value.trim(),
-    email: emailField.value.trim(),
-    whatsapp: whatsappField.value,
-    address: checkoutForm.elements['endereco'].value.trim(),
-    city: checkoutForm.elements['cidade'].value.trim(),
-    zip: zipDigits,
+    name: value('nome'),
+    email: value('email'),
+    whatsapp: field('whatsapp').value,
+    cpf: digitsOf('cpf'),
+    delivery: {
+      zip: zipDigits,
+      street: value('rua'),
+      number: value('numero'),
+      complement: value('complemento'),
+      neighborhood: value('bairro'),
+      city: value('cidade'),
+      state,
+      reference: value('referencia')
+    },
+    payerSame,
+    // O pagador só vai no payload quando é outra pessoa.
+    ...(payerSame ? {} : {
+      payer: {
+        name: value('payerNome'),
+        cpf: digitsOf('payerCpf'),
+        email: value('payerEmail'),
+        billing: {
+          zip: digitsOf('payerCep'),
+          street: value('payerRua'),
+          number: value('payerNumero'),
+          complement: value('payerComplemento'),
+          neighborhood: value('payerBairro'),
+          city: value('payerCidade'),
+          state: value('payerUf').toUpperCase()
+        }
+      }
+    }),
     paymentMethod,
     installments: paymentMethod === 'cartao' && installmentsField ? Number(installmentsField.value) : 1,
     items: cart.map((item) => ({

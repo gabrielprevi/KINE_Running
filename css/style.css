@@ -1160,6 +1160,13 @@ h1, h2, h3, h4 {
   transition: border-color var(--dur-micro) ease;
 }
 .checkout-form input:focus { border-color: var(--line); }
+/* Campos preenchidos pelo CEP: discretos, sem foco forte. O campo do código PIX
+   também é readonly, mas tem estilo próprio e fica fora desta regra. */
+.checkout-form input[readonly]:not(#pixCode) {
+  color: var(--ink-dim);
+  cursor: default;
+}
+.checkout-form input[readonly]:not(#pixCode):focus { border-color: var(--line-soft); }
 .checkout-form select {
   background: var(--bg-alt);
   border: 1px solid var(--line-soft);
@@ -1177,6 +1184,53 @@ h1, h2, h3, h4 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-1);
+}
+/* Colunas especiais do endereço. No celular continuam em duas colunas. */
+.checkout-form__row--number { grid-template-columns: 110px minmax(0, 1fr); }
+.checkout-form__row--city { grid-template-columns: minmax(0, 1fr) 92px; }
+
+/* Caixinha "mesmos dados da entrega": a regra global ".checkout-form label"
+   (coluna) e ".checkout-form input" (borda, padding) valem para tudo no
+   formulário, então estes seletores são mais específicos para vencê-las. */
+.checkout-form label.checkout-form__check {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--text-body-sm);
+  line-height: 1.4;
+  color: var(--ink);
+  cursor: pointer;
+}
+.checkout-form .checkout-form__check input[type="checkbox"] {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  padding: 0;
+  border: 0;
+  accent-color: var(--color-brand-pink);
+  cursor: pointer;
+}
+.checkout-form__cep-status {
+  margin: 0;
+  font-size: var(--text-caption);
+  line-height: 1.4;
+  color: var(--ink-dim);
+}
+.checkout-form__cep-status.is-error { color: var(--color-brand-pink); }
+.checkout-form__cep-status[hidden] { display: none; }
+.checkout-form__payer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.checkout-form__payer[hidden] { display: none; }
+.checkout-form__subtitle {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-caption);
+  line-height: var(--lh-caption);
+  letter-spacing: 0.06em;
+  color: var(--ink);
 }
 .checkout-form button {
   margin-top: var(--space-1);

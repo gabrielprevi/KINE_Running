@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Raleway:wght@400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=20261006b">
+<link rel="stylesheet" href="css/style.css?v=20261008a">
 </head>
 <body>
 
@@ -186,16 +186,82 @@
           <input type="tel" name="whatsapp" inputmode="numeric" autocomplete="tel-national" placeholder="(11) 91234-5678" maxlength="15" required>
         </label>
       </div>
-      <label>Endereço
-        <input type="text" name="endereco" required>
+      <label>CPF
+        <input type="text" name="cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" required>
       </label>
-      <div class="checkout-form__row">
+      <p class="checkout-form__note">Usamos o CPF para emitir a nota fiscal.</p>
+      <label>CEP
+        <input type="text" name="cep" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" maxlength="9" required>
+      </label>
+      <p id="cepStatus" class="checkout-form__cep-status" role="status" hidden></p>
+      <label>Endereço
+        <input type="text" name="rua" readonly required maxlength="120" placeholder="Preenchido pelo CEP" autocomplete="address-line1">
+      </label>
+      <div class="checkout-form__row checkout-form__row--number">
+        <label>Número
+          <input type="text" name="numero" required maxlength="15" autocomplete="off">
+        </label>
+        <label>Complemento (opcional)
+          <input type="text" name="complemento" maxlength="50" placeholder="Apto, bloco..." autocomplete="address-line2">
+        </label>
+      </div>
+      <label>Bairro
+        <input type="text" name="bairro" readonly required maxlength="80" placeholder="Preenchido pelo CEP">
+      </label>
+      <div class="checkout-form__row checkout-form__row--city">
         <label>Cidade
-          <input type="text" name="cidade" required>
+          <input type="text" name="cidade" readonly required maxlength="100" placeholder="Preenchido pelo CEP" autocomplete="address-level2">
         </label>
+        <label>UF
+          <input type="text" name="uf" readonly required maxlength="2" placeholder="UF" autocomplete="address-level1">
+        </label>
+      </div>
+      <label>Ponto de referência (opcional)
+        <input type="text" name="referencia" maxlength="100">
+      </label>
+
+      <label class="checkout-form__check">
+        <input type="checkbox" id="payerSame" name="payerSame" checked>
+        <span>Usar os mesmos dados da entrega no pagamento</span>
+      </label>
+      <div id="payerFields" class="checkout-form__payer" hidden>
+        <h3>Dados de quem vai pagar</h3>
+        <label>Nome completo
+          <input type="text" name="payerNome" required maxlength="120" autocomplete="off" disabled>
+        </label>
+        <label>CPF
+          <input type="text" name="payerCpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" required disabled>
+        </label>
+        <label>E-mail
+          <input type="email" name="payerEmail" autocomplete="off" required disabled>
+        </label>
+        <p class="checkout-form__subtitle">Endereço de cobrança</p>
         <label>CEP
-          <input type="text" name="cep" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" maxlength="9" required>
+          <input type="text" name="payerCep" inputmode="numeric" autocomplete="off" placeholder="00000-000" maxlength="9" required disabled>
         </label>
+        <p id="payerCepStatus" class="checkout-form__cep-status" role="status" hidden></p>
+        <label>Endereço
+          <input type="text" name="payerRua" readonly required maxlength="120" placeholder="Preenchido pelo CEP" autocomplete="off" disabled>
+        </label>
+        <div class="checkout-form__row checkout-form__row--number">
+          <label>Número
+            <input type="text" name="payerNumero" required maxlength="15" autocomplete="off" disabled>
+          </label>
+          <label>Complemento (opcional)
+            <input type="text" name="payerComplemento" maxlength="50" placeholder="Apto, bloco..." autocomplete="off" disabled>
+          </label>
+        </div>
+        <label>Bairro
+          <input type="text" name="payerBairro" readonly required maxlength="80" placeholder="Preenchido pelo CEP" autocomplete="off" disabled>
+        </label>
+        <div class="checkout-form__row checkout-form__row--city">
+          <label>Cidade
+            <input type="text" name="payerCidade" readonly required maxlength="100" placeholder="Preenchido pelo CEP" autocomplete="off" disabled>
+          </label>
+          <label>UF
+            <input type="text" name="payerUf" readonly required maxlength="2" placeholder="UF" autocomplete="off" disabled>
+          </label>
+        </div>
       </div>
 
       <h3 class="checkout-form__section">Forma de pagamento</h3>
@@ -473,7 +539,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="js/script.js?v=20261006b"></script>
+<script src="js/script.js?v=20261008a"></script>
 <script src="js/cinematic.js?v=20260917b"></script>
 </body>
 </html>
