@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Raleway:wght@400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=20261008a">
+<link rel="stylesheet" href="css/style.css?v=20261008b">
 </head>
 <body>
 
@@ -168,151 +168,177 @@
     <button class="icon-btn" id="checkoutClose" aria-label="Fechar">&times;</button>
   </div>
   <div class="checkout-view__body">
-    <div class="checkout-summary">
+    <div class="checkout-summary" id="checkoutSummary">
+      <button type="button" class="checkout-summary__toggle" id="checkoutSummaryToggle" aria-expanded="false" aria-controls="checkoutItems">
+        <span>Resumo do pedido</span>
+        <span class="checkout-summary__right">
+          <strong id="checkoutTotalMini">R$ 0,00</strong>
+          <span class="checkout-summary__chevron" aria-hidden="true"></span>
+        </span>
+      </button>
       <h3>Resumo do pedido</h3>
       <div class="checkout-items" id="checkoutItems"></div>
       <div class="checkout-total"><span>Total</span><strong id="checkoutTotal">R$ 0,00</strong></div>
     </div>
-    <form class="checkout-form" id="checkoutForm">
-      <h3>Dados de entrega</h3>
-      <label>Nome completo
-        <input type="text" name="nome" required>
-      </label>
-      <div class="checkout-form__row">
-        <label>E-mail
-          <input type="email" name="email" autocomplete="email" placeholder="seu@email.com" required>
-        </label>
-        <label>WhatsApp
-          <input type="tel" name="whatsapp" inputmode="numeric" autocomplete="tel-national" placeholder="(11) 91234-5678" maxlength="15" required>
-        </label>
+    <form class="checkout-form" id="checkoutForm" novalidate>
+      <div class="checkout-steps">
+        <div class="checkout-steps__bars" aria-hidden="true">
+          <span class="is-active"></span><span></span><span></span>
+        </div>
+        <p class="checkout-steps__label" id="checkoutStepLabel" aria-live="polite">Etapa 1 de 3 · Seus dados</p>
       </div>
-      <label>CPF
-        <input type="text" name="cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" required>
-      </label>
-      <p class="checkout-form__note">Usamos o CPF para emitir a nota fiscal.</p>
-      <label>CEP
-        <input type="text" name="cep" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" maxlength="9" required>
-      </label>
-      <p id="cepStatus" class="checkout-form__cep-status" role="status" hidden></p>
-      <label>Endereço
-        <input type="text" name="rua" readonly required maxlength="120" placeholder="Preenchido pelo CEP" autocomplete="address-line1">
-      </label>
-      <div class="checkout-form__row checkout-form__row--number">
-        <label>Número
-          <input type="text" name="numero" required maxlength="15" autocomplete="off">
-        </label>
-        <label>Complemento (opcional)
-          <input type="text" name="complemento" maxlength="50" placeholder="Apto, bloco..." autocomplete="address-line2">
-        </label>
-      </div>
-      <label>Bairro
-        <input type="text" name="bairro" readonly required maxlength="80" placeholder="Preenchido pelo CEP">
-      </label>
-      <div class="checkout-form__row checkout-form__row--city">
-        <label>Cidade
-          <input type="text" name="cidade" readonly required maxlength="100" placeholder="Preenchido pelo CEP" autocomplete="address-level2">
-        </label>
-        <label>UF
-          <input type="text" name="uf" readonly required maxlength="2" placeholder="UF" autocomplete="address-level1">
-        </label>
-      </div>
-      <label>Ponto de referência (opcional)
-        <input type="text" name="referencia" maxlength="100">
-      </label>
 
-      <label class="checkout-form__check">
-        <input type="checkbox" id="payerSame" name="payerSame" checked>
-        <span>Usar os mesmos dados da entrega no pagamento</span>
-      </label>
-      <div id="payerFields" class="checkout-form__payer" hidden>
-        <h3>Dados de quem vai pagar</h3>
+      <div class="checkout-step" data-step="1">
         <label>Nome completo
-          <input type="text" name="payerNome" required maxlength="120" autocomplete="off" disabled>
+          <input type="text" name="nome" required>
         </label>
+        <div class="checkout-form__row">
+          <label>E-mail
+            <input type="email" name="email" autocomplete="email" placeholder="seu@email.com" required>
+          </label>
+          <label>WhatsApp
+            <input type="tel" name="whatsapp" inputmode="numeric" autocomplete="tel-national" placeholder="(11) 91234-5678" maxlength="15" required>
+          </label>
+        </div>
         <label>CPF
-          <input type="text" name="payerCpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" required disabled>
+          <input type="text" name="cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" required>
         </label>
-        <label>E-mail
-          <input type="email" name="payerEmail" autocomplete="off" required disabled>
-        </label>
-        <p class="checkout-form__subtitle">Endereço de cobrança</p>
+        <p class="checkout-form__note">Usamos o CPF para emitir a nota fiscal.</p>
+      </div>
+
+      <div class="checkout-step" data-step="2" hidden>
         <label>CEP
-          <input type="text" name="payerCep" inputmode="numeric" autocomplete="off" placeholder="00000-000" maxlength="9" required disabled>
+          <input type="text" name="cep" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" maxlength="9" required>
         </label>
-        <p id="payerCepStatus" class="checkout-form__cep-status" role="status" hidden></p>
+        <p id="cepStatus" class="checkout-form__cep-status" role="status" hidden></p>
         <label>Endereço
-          <input type="text" name="payerRua" readonly required maxlength="120" placeholder="Preenchido pelo CEP" autocomplete="off" disabled>
+          <input type="text" name="rua" readonly required maxlength="120" placeholder="Preenchido pelo CEP" autocomplete="address-line1">
         </label>
         <div class="checkout-form__row checkout-form__row--number">
           <label>Número
-            <input type="text" name="payerNumero" required maxlength="15" autocomplete="off" disabled>
+            <input type="text" name="numero" required maxlength="15" autocomplete="off">
           </label>
           <label>Complemento (opcional)
-            <input type="text" name="payerComplemento" maxlength="50" placeholder="Apto, bloco..." autocomplete="off" disabled>
+            <input type="text" name="complemento" maxlength="50" placeholder="Apto, bloco..." autocomplete="address-line2">
           </label>
         </div>
         <label>Bairro
-          <input type="text" name="payerBairro" readonly required maxlength="80" placeholder="Preenchido pelo CEP" autocomplete="off" disabled>
+          <input type="text" name="bairro" readonly required maxlength="80" placeholder="Preenchido pelo CEP">
         </label>
         <div class="checkout-form__row checkout-form__row--city">
           <label>Cidade
-            <input type="text" name="payerCidade" readonly required maxlength="100" placeholder="Preenchido pelo CEP" autocomplete="off" disabled>
+            <input type="text" name="cidade" readonly required maxlength="100" placeholder="Preenchido pelo CEP" autocomplete="address-level2">
           </label>
           <label>UF
-            <input type="text" name="payerUf" readonly required maxlength="2" placeholder="UF" autocomplete="off" disabled>
+            <input type="text" name="uf" readonly required maxlength="2" placeholder="UF" autocomplete="address-level1">
           </label>
         </div>
+        <label>Ponto de referência (opcional)
+          <input type="text" name="referencia" maxlength="100">
+        </label>
       </div>
 
-      <h3 class="checkout-form__section">Forma de pagamento</h3>
-      <div class="payment-tabs" id="paymentTabs" role="tablist">
-        <button type="button" class="payment-tab is-active" data-method="cartao" role="tab" aria-selected="true">Cartão de crédito</button>
-        <button type="button" class="payment-tab" data-method="pix" role="tab" aria-selected="false">PIX</button>
-        <button type="button" class="payment-tab" data-method="boleto" role="tab" aria-selected="false">Boleto</button>
-      </div>
-
-      <div class="payment-panel" data-method-panel="cartao">
-        <label>Número do cartão
-          <input type="text" name="cardNumber" id="cardNumber" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" maxlength="19" required>
+      <div class="checkout-step" data-step="3" hidden>
+        <label class="checkout-form__check">
+          <input type="checkbox" id="payerSame" name="payerSame" checked>
+          <span>Usar os mesmos dados da entrega no pagamento</span>
         </label>
-        <label>Nome impresso no cartão
-          <input type="text" name="cardName" autocomplete="cc-name" placeholder="Como está no cartão" required>
-        </label>
-        <div class="checkout-form__row">
-          <label>Validade
-            <input type="text" name="cardExpiry" id="cardExpiry" autocomplete="cc-exp" placeholder="MM/AA" maxlength="5" required>
+        <div id="payerFields" class="checkout-form__payer" hidden>
+          <h3>Dados de quem vai pagar</h3>
+          <label>Nome completo
+            <input type="text" name="payerNome" required maxlength="120" autocomplete="off" disabled>
           </label>
-          <label>CVV
-            <input type="text" name="cardCvv" inputmode="numeric" autocomplete="cc-csc" placeholder="000" maxlength="4" required>
+          <label>CPF
+            <input type="text" name="payerCpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" required disabled>
           </label>
-        </div>
-        <label>Parcelas
-          <select name="installments" id="installmentsSelect"></select>
-        </label>
-      </div>
-
-      <div class="payment-panel" data-method-panel="pix" hidden>
-        <div class="pix-box">
-          <div class="pix-qr" aria-hidden="true"></div>
-          <p>Escaneie o QR Code no app do seu banco ou copie o código PIX abaixo.</p>
-          <div class="pix-code-row">
-            <input type="text" id="pixCode" readonly value="00020126580014BR.GOV.BCB.PIX0136kine-teste-5b2c-4e91-9f0a-0000000000005204000053039865400">
-            <button type="button" id="pixCopyBtn">Copiar</button>
+          <label>E-mail
+            <input type="email" name="payerEmail" autocomplete="off" required disabled>
+          </label>
+          <p class="checkout-form__subtitle">Endereço de cobrança</p>
+          <label>CEP
+            <input type="text" name="payerCep" inputmode="numeric" autocomplete="off" placeholder="00000-000" maxlength="9" required disabled>
+          </label>
+          <p id="payerCepStatus" class="checkout-form__cep-status" role="status" hidden></p>
+          <label>Endereço
+            <input type="text" name="payerRua" readonly required maxlength="120" placeholder="Preenchido pelo CEP" autocomplete="off" disabled>
+          </label>
+          <div class="checkout-form__row checkout-form__row--number">
+            <label>Número
+              <input type="text" name="payerNumero" required maxlength="15" autocomplete="off" disabled>
+            </label>
+            <label>Complemento (opcional)
+              <input type="text" name="payerComplemento" maxlength="50" placeholder="Apto, bloco..." autocomplete="off" disabled>
+            </label>
+          </div>
+          <label>Bairro
+            <input type="text" name="payerBairro" readonly required maxlength="80" placeholder="Preenchido pelo CEP" autocomplete="off" disabled>
+          </label>
+          <div class="checkout-form__row checkout-form__row--city">
+            <label>Cidade
+              <input type="text" name="payerCidade" readonly required maxlength="100" placeholder="Preenchido pelo CEP" autocomplete="off" disabled>
+            </label>
+            <label>UF
+              <input type="text" name="payerUf" readonly required maxlength="2" placeholder="UF" autocomplete="off" disabled>
+            </label>
           </div>
         </div>
+
+        <h3 class="checkout-form__section">Forma de pagamento</h3>
+        <div class="payment-tabs" id="paymentTabs" role="tablist">
+          <button type="button" class="payment-tab is-active" data-method="cartao" role="tab" aria-selected="true">Cartão de crédito</button>
+          <button type="button" class="payment-tab" data-method="pix" role="tab" aria-selected="false">PIX</button>
+          <button type="button" class="payment-tab" data-method="boleto" role="tab" aria-selected="false">Boleto</button>
+        </div>
+
+        <div class="payment-panel" data-method-panel="cartao">
+          <label>Número do cartão
+            <input type="text" name="cardNumber" id="cardNumber" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" maxlength="19" required>
+          </label>
+          <label>Nome impresso no cartão
+            <input type="text" name="cardName" autocomplete="cc-name" placeholder="Como está no cartão" required>
+          </label>
+          <div class="checkout-form__row">
+            <label>Validade
+              <input type="text" name="cardExpiry" id="cardExpiry" autocomplete="cc-exp" placeholder="MM/AA" maxlength="5" required>
+            </label>
+            <label>CVV
+              <input type="text" name="cardCvv" inputmode="numeric" autocomplete="cc-csc" placeholder="000" maxlength="4" required>
+            </label>
+          </div>
+          <label>Parcelas
+            <select name="installments" id="installmentsSelect"></select>
+          </label>
+        </div>
+
+        <div class="payment-panel" data-method-panel="pix" hidden>
+          <div class="pix-box">
+            <div class="pix-qr" aria-hidden="true"></div>
+            <p>Escaneie o QR Code no app do seu banco ou copie o código PIX abaixo.</p>
+            <div class="pix-code-row">
+              <input type="text" id="pixCode" readonly value="00020126580014BR.GOV.BCB.PIX0136kine-teste-5b2c-4e91-9f0a-0000000000005204000053039865400">
+              <button type="button" id="pixCopyBtn">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="payment-panel" data-method-panel="boleto" hidden>
+          <div class="boleto-box">
+            <div class="boleto-barcode" aria-hidden="true"></div>
+            <p>O boleto vence em 3 dias úteis após a confirmação do pedido.</p>
+          </div>
+        </div>
+        <p class="checkout-form__note">Site de teste — nenhum pagamento real será processado.</p>
+        <p class="checkout-form__note">Seus dados de contato e entrega são salvos apenas para processar e entregar o pedido.</p>
       </div>
 
-      <div class="payment-panel" data-method-panel="boleto" hidden>
-        <div class="boleto-box">
-          <div class="boleto-barcode" aria-hidden="true"></div>
-          <p>O boleto vence em 3 dias úteis após a confirmação do pedido.</p>
+      <div class="checkout-form__nav">
+        <p class="checkout-form__error" id="checkoutError" role="alert" hidden></p>
+        <div class="checkout-form__nav-buttons">
+          <button type="button" class="btn btn--outline" id="checkoutBack" hidden>VOLTAR</button>
+          <button type="button" class="btn btn--solid" id="checkoutNext">CONTINUAR</button>
+          <button type="submit" class="btn btn--solid" id="checkoutSubmit" hidden>CONFIRMAR PEDIDO (TESTE)</button>
         </div>
       </div>
-
-      <p class="checkout-form__error" id="checkoutError" role="alert" hidden></p>
-      <button type="submit" class="btn btn--solid">CONFIRMAR PEDIDO (TESTE)</button>
-      <p class="checkout-form__note">Site de teste — nenhum pagamento real será processado.</p>
-      <p class="checkout-form__note">Seus dados de contato e entrega são salvos apenas para processar e entregar o pedido.</p>
     </form>
   </div>
 </div>
@@ -539,7 +565,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="js/script.js?v=20261008a"></script>
+<script src="js/script.js?v=20261008b"></script>
 <script src="js/cinematic.js?v=20260917b"></script>
 </body>
 </html>

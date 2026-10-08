@@ -549,6 +549,9 @@ function renderCheckout() {
     </div>
   `).join('');
   checkoutTotal.textContent = formatBRL(cartTotal());
+  // Total da linha recolhida do resumo (só aparece no celular).
+  const checkoutTotalMini = document.getElementById('checkoutTotalMini');
+  if (checkoutTotalMini) checkoutTotalMini.textContent = formatBRL(cartTotal());
 }
 
 function populateInstallments() {
@@ -579,14 +582,77 @@ function setPaymentMethod(method) {
   });
 }
 
+// ---------- Checkout em 3 etapas ----------
+// O estado inicial vem do próprio markup (etapas 2 e 3 com hidden) e é
+// reiniciado em openCheckout. Os elementos do formulário são buscados no
+// momento do uso, porque o innerHTML dele é refeito a cada abertura.
+const CHECKOUT_STEPS = ['Seus dados', 'Entrega', 'Pagamento'];
+let checkoutStep = 1;
+
+function showCheckoutError(message, field) {
+  const errorEl = checkoutForm.querySelector('#checkoutError');
+  if (errorEl) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+  if (field) field.focus();
+}
+
+function clearCheckoutError() {
+  const errorEl = checkoutForm.querySelector('#checkoutError');
+  if (errorEl) errorEl.hidden = true;
+}
+
+function goToCheckoutStep(n) {
+  if (checkoutSending) return;
+  checkoutStep = n;
+  checkoutForm.querySelectorAll('.checkout-step').forEach((step) => {
+    step.hidden = Number(step.dataset.step) !== n;
+  });
+  checkoutForm.querySelectorAll('.checkout-steps__bars span').forEach((bar, index) => {
+    bar.classList.toggle('is-done', index < n - 1);
+    bar.classList.toggle('is-active', index === n - 1);
+  });
+  const label = checkoutForm.querySelector('#checkoutStepLabel');
+  if (label) label.textContent = 'Etapa ' + n + ' de ' + CHECKOUT_STEPS.length + ' · ' + CHECKOUT_STEPS[n - 1];
+  const back = checkoutForm.querySelector('#checkoutBack');
+  const next = checkoutForm.querySelector('#checkoutNext');
+  const submit = checkoutForm.querySelector('#checkoutSubmit');
+  if (back) back.hidden = n === 1;
+  if (next) next.hidden = n === CHECKOUT_STEPS.length;
+  if (submit) submit.hidden = n !== CHECKOUT_STEPS.length;
+  clearCheckoutError();
+  checkoutView.scrollTop = 0;
+  // Sem foco automático: no celular isso abriria o teclado sem o cliente pedir.
+}
+
+function goToNextCheckoutStep() {
+  if (checkoutStep >= CHECKOUT_STEPS.length) return;
+  const problem = validateCheckoutStep(checkoutStep);
+  if (problem) {
+    showCheckoutError(problem.message, problem.field);
+    return;
+  }
+  goToCheckoutStep(checkoutStep + 1);
+}
+
 function openCheckout() {
   checkoutForm.innerHTML = checkoutFormOriginalHTML;
   cepLastRequested.cep = '';
   cepLastRequested.payerCep = '';
+  cepPending.cep = false;
+  cepPending.payerCep = false;
   syncPayerFields();
   renderCheckout();
   populateInstallments();
   setPaymentMethod('cartao');
+  // checkoutStep é zerado direto: se um envio ainda estiver em andamento, goToCheckoutStep não age.
+  checkoutStep = 1;
+  goToCheckoutStep(1);
+  const checkoutSummary = document.getElementById('checkoutSummary');
+  const checkoutSummaryToggle = document.getElementById('checkoutSummaryToggle');
+  if (checkoutSummary) checkoutSummary.classList.remove('is-expanded');
+  if (checkoutSummaryToggle) checkoutSummaryToggle.setAttribute('aria-expanded', 'false');
   checkoutView.classList.add('is-open');
   checkoutBackdrop.classList.add('is-open');
   pushOverlayHistory();
@@ -600,12 +666,22 @@ function closeCheckout() {
 checkoutClose.addEventListener('click', closeCheckout);
 checkoutBackdrop.addEventListener('click', closeCheckout);
 
+// O botão de recolher o resumo fica fora do formulário (não é refeito a cada
+// abertura), então tem listener próprio. Só aparece no celular.
+document.getElementById('checkoutSummaryToggle').addEventListener('click', () => {
+  const expanded = document.getElementById('checkoutSummary').classList.toggle('is-expanded');
+  document.getElementById('checkoutSummaryToggle').setAttribute('aria-expanded', String(expanded));
+});
+
 // The form's innerHTML is replaced wholesale on every open/submit (see
 // openCheckout / the submit handler below), so listeners live on the
 // persistent <form> element via delegation instead of on its children.
 checkoutForm.addEventListener('click', (e) => {
   const tab = e.target.closest('.payment-tab');
   if (tab) setPaymentMethod(tab.dataset.method);
+
+  if (e.target.closest('#checkoutNext')) goToNextCheckoutStep();
+  if (e.target.closest('#checkoutBack')) goToCheckoutStep(checkoutStep - 1);
 
   if (e.target.closest('#pixCopyBtn')) {
     const pixInput = document.getElementById('pixCode');
@@ -664,6 +740,7 @@ checkoutForm.addEventListener('input', (e) => {
     } else {
       // CEP incompleto: o endereço que veio de um CEP anterior não vale mais.
       cepLastRequested[cepBlock.cep] = '';
+      cepPending[cepBlock.cep] = false;
       resetAddressFields(cepBlock);
       setCepStatus(cepBlock, '');
     }
@@ -740,6 +817,8 @@ const CEP_BLOCKS = [
 ];
 // Último CEP consultado em cada bloco, para ignorar respostas antigas.
 const cepLastRequested = { cep: '', payerCep: '' };
+// Há uma busca em andamento no bloco? Impede avançar de etapa com o endereço pela metade.
+const cepPending = { cep: false, payerCep: false };
 
 function cepBlockFor(fieldName) {
   return CEP_BLOCKS.find((block) => block.cep === fieldName) || null;
@@ -769,10 +848,14 @@ function setCepStatus(block, message, isError) {
 
 async function runCepLookup(block, digits) {
   cepLastRequested[block.cep] = digits;
+  cepPending[block.cep] = true;
   resetAddressFields(block);
   setCepStatus(block, 'Buscando endereço...');
 
   const result = await lookupCEP(digits);
+
+  // Só esta busca baixa a marca: uma resposta atrasada não apaga a de uma busca mais nova.
+  if (cepLastRequested[block.cep] === digits) cepPending[block.cep] = false;
 
   // Resposta antiga: o CEP mudou, ou o formulário foi refeito, durante a busca.
   const cepField = checkoutForm.elements[block.cep];
@@ -866,96 +949,114 @@ function orderErrorMessage(code) {
   return 'Não foi possível registrar o pedido agora. Tente de novo em instantes.';
 }
 
+// Helpers do formulário: sempre buscam o campo no momento do uso, porque o
+// innerHTML do formulário é refeito a cada abertura do checkout.
+function field(name) {
+  return checkoutForm.elements[name];
+}
+
+function value(name) {
+  return field(name).value.trim();
+}
+
+function digitsOf(name) {
+  return field(name).value.replace(/\D/g, '');
+}
+
+// Onde pôr o foco quando falta endereço: o primeiro campo vazio, se ele puder
+// ser digitado; se estiver travado (readonly), o CEP, que é quem preenche.
+function addressGapField(block) {
+  const emptyName = [block.street, block.neighborhood, block.city, block.state].find((name) => !value(name));
+  return emptyName && !field(emptyName).readOnly ? field(emptyName) : field(block.cep);
+}
+
+// Valida os campos de UMA etapa. Devolve null (tudo certo) ou { message, field }.
+// A ordem e as mensagens são as de sempre; o JS é quem valida, já que o
+// formulário tem novalidate (campos obrigatórios de etapas escondidas
+// travariam o envio sem mensagem nenhuma).
+function validateCheckoutStep(n) {
+  if (n === 1) {
+    if (value('nome').length < 2) return { message: 'Informe seu nome completo.', field: field('nome') };
+    if (!isValidEmail(field('email').value)) return { message: 'Digite um e-mail válido.', field: field('email') };
+    if (!isValidWhatsappBR(field('whatsapp').value)) return { message: 'Digite um WhatsApp válido com DDD.', field: field('whatsapp') };
+    if (!isValidCPF(field('cpf').value)) return { message: 'Digite um CPF válido.', field: field('cpf') };
+    return null;
+  }
+
+  if (n === 2) {
+    if (digitsOf('cep').length !== 8) return { message: 'Digite um CEP válido (8 números).', field: field('cep') };
+    if (cepPending.cep) return { message: 'Aguarde a busca do endereço.', field: field('cep') };
+    if (!value('rua') || !value('bairro') || !value('cidade') || !value('uf')) {
+      return { message: 'Digite o CEP para preencher o endereço.', field: addressGapField(CEP_BLOCKS[0]) };
+    }
+    if (!BR_STATES.includes(value('uf').toUpperCase())) return { message: 'Informe um estado (UF) válido.', field: field('uf') };
+    if (!value('numero')) return { message: 'Informe o número.', field: field('numero') };
+    return null;
+  }
+
+  // Etapa 3: pagador (se for outra pessoa) e cartão.
+  const payerSameBox = checkoutForm.querySelector('#payerSame');
+  if (payerSameBox && !payerSameBox.checked) {
+    if (value('payerNome').length < 2) return { message: 'Informe o nome de quem vai pagar.', field: field('payerNome') };
+    if (!isValidCPF(field('payerCpf').value)) return { message: 'Digite um CPF válido para o pagador.', field: field('payerCpf') };
+    if (!isValidEmail(field('payerEmail').value)) return { message: 'Digite um e-mail válido para o pagador.', field: field('payerEmail') };
+    if (digitsOf('payerCep').length !== 8) return { message: 'Complete o endereço de cobrança.', field: field('payerCep') };
+    if (cepPending.payerCep) return { message: 'Aguarde a busca do endereço.', field: field('payerCep') };
+    if (!value('payerRua') || !value('payerBairro') || !value('payerCidade') || !value('payerUf')) {
+      return { message: 'Complete o endereço de cobrança.', field: addressGapField(CEP_BLOCKS[1]) };
+    }
+    if (!BR_STATES.includes(value('payerUf').toUpperCase())) return { message: 'Complete o endereço de cobrança.', field: field('payerUf') };
+    if (!value('payerNumero')) return { message: 'Complete o endereço de cobrança.', field: field('payerNumero') };
+  }
+
+  // Regras provisórias do cartão: o gateway de pagamento vai substituir estes campos.
+  const activeTab = checkoutForm.querySelector('.payment-tab.is-active');
+  if (!activeTab || activeTab.dataset.method === 'cartao') {
+    const cardDigits = digitsOf('cardNumber').length;
+    if (cardDigits < 13 || cardDigits > 19) return { message: 'Digite o número do cartão.', field: field('cardNumber') };
+    if (value('cardName').length < 2) return { message: 'Informe o nome impresso no cartão.', field: field('cardName') };
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(value('cardExpiry'))) return { message: 'Digite a validade no formato MM/AA.', field: field('cardExpiry') };
+    const cvvDigits = digitsOf('cardCvv').length;
+    if (cvvDigits < 3 || cvvDigits > 4) return { message: 'Digite o código de segurança (CVV).', field: field('cardCvv') };
+  }
+  return null;
+}
+
 let checkoutSending = false;
 
 checkoutForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (checkoutSending) return;
 
-  // O innerHTML do formulário é refeito a cada abertura: estes elementos são
-  // buscados agora, no momento do envio.
-  const errorEl = checkoutForm.querySelector('#checkoutError');
+  // O innerHTML do formulário é refeito a cada abertura: o botão é buscado
+  // agora, no momento do envio.
   const submitBtn = checkoutForm.querySelector('button[type="submit"]');
-  const showError = (message, field) => {
-    if (errorEl) {
-      errorEl.textContent = message;
-      errorEl.hidden = false;
-    }
-    if (field) field.focus();
-  };
 
   if (cart.length === 0) {
-    showError('Seu carrinho está vazio.');
+    showCheckoutError('Seu carrinho está vazio.');
     return;
   }
 
-  const field = (name) => checkoutForm.elements[name];
-  const value = (name) => field(name).value.trim();
-  const digitsOf = (name) => field(name).value.replace(/\D/g, '');
+  // Enter nas etapas 1 e 2 vale como CONTINUAR: não envia o pedido.
+  if (checkoutStep < CHECKOUT_STEPS.length) {
+    goToNextCheckoutStep();
+    return;
+  }
+
+  // Na última etapa confere tudo de novo; se uma etapa anterior falhar, volta para ela.
+  for (let step = 1; step <= CHECKOUT_STEPS.length; step++) {
+    const problem = validateCheckoutStep(step);
+    if (problem) {
+      goToCheckoutStep(step);
+      showCheckoutError(problem.message, problem.field);
+      return;
+    }
+  }
+
   const payerSameBox = checkoutForm.querySelector('#payerSame');
   const payerSame = !payerSameBox || payerSameBox.checked;
-
-  // Onde pôr o foco quando falta endereço: o primeiro campo vazio, se ele puder
-  // ser digitado; se estiver travado (readonly), o CEP, que é quem preenche.
-  const addressGapField = (block) => {
-    const emptyName = [block.street, block.neighborhood, block.city, block.state].find((name) => !value(name));
-    return emptyName && !field(emptyName).readOnly ? field(emptyName) : field(block.cep);
-  };
-
-  if (!isValidEmail(field('email').value)) {
-    showError('Digite um e-mail válido.', field('email'));
-    return;
-  }
-  if (!isValidWhatsappBR(field('whatsapp').value)) {
-    showError('Digite um WhatsApp válido com DDD.', field('whatsapp'));
-    return;
-  }
-  if (!isValidCPF(field('cpf').value)) {
-    showError('Digite um CPF válido.', field('cpf'));
-    return;
-  }
   const zipDigits = digitsOf('cep');
-  if (zipDigits.length !== 8) {
-    showError('Digite um CEP válido (8 números).', field('cep'));
-    return;
-  }
-  if (!value('rua') || !value('bairro') || !value('cidade') || !value('uf')) {
-    showError('Digite o CEP para preencher o endereço.', addressGapField(CEP_BLOCKS[0]));
-    return;
-  }
   const state = value('uf').toUpperCase();
-  if (!BR_STATES.includes(state)) {
-    showError('Informe um estado (UF) válido.', field('uf'));
-    return;
-  }
-  if (!value('numero')) {
-    showError('Informe o número.', field('numero'));
-    return;
-  }
-
-  if (!payerSame) {
-    if (value('payerNome').length < 2) {
-      showError('Informe o nome de quem vai pagar.', field('payerNome'));
-      return;
-    }
-    if (!isValidCPF(field('payerCpf').value)) {
-      showError('Digite um CPF válido para o pagador.', field('payerCpf'));
-      return;
-    }
-    if (!isValidEmail(field('payerEmail').value)) {
-      showError('Digite um e-mail válido para o pagador.', field('payerEmail'));
-      return;
-    }
-    let billingGap = null;
-    if (digitsOf('payerCep').length !== 8) billingGap = field('payerCep');
-    else if (!value('payerRua') || !value('payerBairro') || !value('payerCidade') || !value('payerUf')) billingGap = addressGapField(CEP_BLOCKS[1]);
-    else if (!BR_STATES.includes(value('payerUf').toUpperCase())) billingGap = field('payerUf');
-    else if (!value('payerNumero')) billingGap = field('payerNumero');
-    if (billingGap) {
-      showError('Complete o endereço de cobrança.', billingGap);
-      return;
-    }
-  }
 
   const activeTab = checkoutForm.querySelector('.payment-tab.is-active');
   const paymentMethod = activeTab ? activeTab.dataset.method : 'cartao';
@@ -1024,10 +1125,13 @@ checkoutForm.addEventListener('submit', async (e) => {
         <p>Pagamento simulado via ${methodLabel} — nenhuma cobrança real foi processada, isso é um site de demonstração.</p>
       </div>
     `;
+    // Volta o contador para 1: o gesto de voltar fecha o painel em vez de tentar mudar de etapa.
+    checkoutStep = 1;
+    checkoutView.scrollTop = 0;
     return;
   }
 
-  showError(orderErrorMessage(result.error));
+  showCheckoutError(orderErrorMessage(result.error));
   submitBtn.disabled = false;
   submitBtn.textContent = submitLabel;
 });
@@ -1057,7 +1161,16 @@ function pushOverlayHistory() {
 
 window.addEventListener('popstate', () => {
   if (lightbox.classList.contains('is-open')) closeLightbox();
-  else if (checkoutView.classList.contains('is-open')) closeCheckout();
+  else if (checkoutView.classList.contains('is-open')) {
+    // Nas etapas 2 e 3, voltar leva à etapa anterior e repõe a entrada do
+    // histórico que o gesto consumiu; na etapa 1 fecha o painel.
+    if (checkoutStep > 1 && !checkoutSending) {
+      goToCheckoutStep(checkoutStep - 1);
+      pushOverlayHistory();
+    } else {
+      closeCheckout();
+    }
+  }
   else if (productView.classList.contains('is-open')) closeProductView();
   else if (cartDrawer.classList.contains('is-open')) closeCart();
   else if (searchPanel.classList.contains('is-open')) closeSearch();
