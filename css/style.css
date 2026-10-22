@@ -1650,14 +1650,22 @@ h1, h2, h3, h4 {
 }
 .marquee-track {
   display: flex;
-  gap: var(--space-3);
-  white-space: nowrap;
   width: max-content;
-  animation: scrollX 26s linear infinite;
+  animation: scrollX 160s linear infinite;
   font-family: var(--font-roobert);
   font-size: var(--text-body-sm);
   font-weight: var(--weight-regular);
   letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.marquee-group {
+  display: flex;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  min-width: 100vw;
+  gap: var(--space-3);
+  padding-right: var(--space-3);
+  justify-content: space-around;
 }
 @keyframes scrollX {
   from { transform: translateX(0); }
