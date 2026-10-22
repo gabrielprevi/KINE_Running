@@ -2050,14 +2050,14 @@ h1, h2, h3, h4 {
   background: var(--bg);
   color: var(--color-felt-gray);
   border-top: 1px solid var(--line);
-  padding: var(--space-5) 0 var(--space-3);
+  padding: var(--space-5) 0;
   font-size: var(--text-micro);
   line-height: var(--lh-micro);
   font-weight: var(--weight-regular);
 }
-.footer-top {
+.footer-inner {
   max-width: var(--page-max-width);
-  margin: 0 auto var(--space-4);
+  margin: 0 auto;
   padding: 0 var(--gutter);
   display: flex;
   justify-content: space-between;
@@ -2065,98 +2065,20 @@ h1, h2, h3, h4 {
   gap: var(--space-3);
   flex-wrap: wrap;
 }
-.logo--footer {
-  /* .logo carrega order:1 / margin-right:auto do header — neutralizados aqui */
-  order: 0;
-  margin-right: 0;
-  font-size: var(--text-body-sm);
-  font-weight: var(--weight-regular);
-  letter-spacing: 0.02em;
-  color: var(--ink);
-}
-.newsletter {
+.footer-logo { display: inline-block; line-height: 0; transition: opacity var(--dur-micro) ease; }
+.footer-logo:hover { opacity: 0.55; }
+.footer-logo img { display: block; width: 112px; height: auto; }
+.footer-contact {
   display: flex;
-  gap: 0;
-  border-bottom: 1px solid var(--line-soft);
-  border-radius: var(--radius-flat);
-  min-width: 280px;
-  transition: border-color var(--dur-micro) ease;
-}
-.newsletter:focus-within { border-color: var(--line); }
-.newsletter input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-flat);
-  color: var(--ink);
-  font-family: var(--font-roobert);
-  font-size: var(--text-micro);
-  line-height: var(--lh-micro);
-  padding: var(--space-1) 4px;
-  outline: none;
-}
-.newsletter button {
-  background: none;
-  border: none;
-  border-radius: var(--radius-flat);
-  color: var(--ink);
-  font-family: var(--font-roobert);
-  font-weight: var(--weight-regular);
-  font-size: var(--text-micro);
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: opacity var(--dur-micro) ease;
-}
-.newsletter button:hover { opacity: 0.45; }
-.newsletter button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.newsletter[hidden] { display: none; }
-.newsletter-block { min-width: 280px; }
-.newsletter__note {
-  margin: var(--space-1) 0 0;
-  font-size: var(--text-micro);
-  line-height: var(--lh-micro);
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  font-size: var(--text-body-sm);
+  line-height: 1.4;
   color: var(--ink-dim);
 }
-
-.footer-links {
-  max-width: var(--page-max-width);
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-3);
-  padding: 0 var(--gutter) var(--space-4);
-  border-bottom: 1px solid var(--line-soft);
-}
-.footer-links h4 {
-  font-family: var(--font-roobert);
-  font-size: var(--text-micro);
-  line-height: var(--lh-micro);
-  letter-spacing: 0.1em;
-  color: var(--ink);
-  margin-bottom: var(--space-2);
-  font-weight: var(--weight-regular);
-}
-.footer-links a {
-  display: block;
-  font-size: var(--text-micro);
-  line-height: var(--lh-micro);
-  padding: var(--space-1) 0 0;
-  color: var(--color-felt-gray);
-  border-radius: var(--radius-flat);
-}
-.footer-links a:hover { color: var(--ink); }
-
-.footer-bottom {
-  max-width: var(--page-max-width);
-  margin: var(--space-3) auto 0;
-  padding: 0 var(--gutter);
-  font-size: var(--text-micro);
-  line-height: var(--lh-micro);
-  color: var(--color-felt-gray);
-}
+.footer-contact a { color: var(--ink); transition: opacity var(--dur-micro) ease; }
+.footer-contact a:hover { opacity: 0.55; }
 
 /* ========================================================
    Escala tipográfica — degraus FIXOS
@@ -2247,7 +2169,8 @@ h1, h2, h3, h4 {
   .product-grid { grid-template-columns: 1fr; }
   .product-col--right { margin-top: 0; }
   .stats-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .footer-links { grid-template-columns: 1fr; }
+  .footer-inner { flex-direction: column; align-items: flex-start; }
+  .footer-contact { align-items: flex-start; }
 }
 
 /* #hyrox-video usa a mesma estrutura visual do .outdoor-hero (largura cheia,
