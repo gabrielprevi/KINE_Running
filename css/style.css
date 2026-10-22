@@ -1971,43 +1971,6 @@ h1, h2, h3, h4 {
   .outdoor-hero-content h2 { font-size: var(--text-body); line-height: 1.15; }
 }
 
-/* ---------- Stats strip ----------
-   Nada centralizado fora do hero: cada número e sua legenda alinham à
-   esquerda, sem divisórias verticais, com 8px entre as duas linhas. */
-.stats-strip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  column-gap: var(--element-gap);
-  row-gap: var(--space-4);
-  max-width: var(--page-max-width);
-  margin: 0 auto;
-  padding: var(--space-5) var(--gutter);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-}
-.stat {
-  padding: 0;
-  text-align: left;
-  border-left: none;
-}
-.stat strong {
-  display: block;
-  font-family: var(--font-roobert);
-  font-size: var(--text-subheading);
-  line-height: var(--lh-subheading);
-  font-weight: var(--weight-light);
-  letter-spacing: -0.03em;
-  color: var(--ink);
-}
-.stat span {
-  display: block;
-  font-size: var(--text-caption);
-  line-height: var(--lh-caption);
-  color: var(--ink-dim);
-  margin-top: var(--space-1);
-  letter-spacing: 0.02em;
-}
-
 /* ---------- Promo banner ---------- */
 .promo-banner {
   max-width: var(--page-max-width);
@@ -2179,7 +2142,6 @@ h1, h2, h3, h4 {
   /* As duas colunas colapsam numa só; a direita perde o deslocamento. */
   .product-grid { grid-template-columns: 1fr; }
   .product-col--right { margin-top: 0; }
-  .stats-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .footer-inner { flex-direction: column; align-items: flex-start; }
   .footer-contact { align-items: flex-start; }
 }
