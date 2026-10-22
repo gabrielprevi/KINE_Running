@@ -2077,8 +2077,19 @@ h1, h2, h3, h4 {
   line-height: 1.4;
   color: var(--ink-dim);
 }
-.footer-contact a { color: var(--ink); transition: opacity var(--dur-micro) ease; }
-.footer-contact a:hover { opacity: 0.55; }
+.footer-contact a { color: var(--ink); }
+/* Sublinhado fino que aparece no hover (vale pro Instagram e pro telefone; quando o
+   telefone virar link, a mesma regra já cobre o <a>). */
+.footer-contact a,
+.footer-contact span {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: transparent;
+  transition: text-decoration-color var(--dur-micro) ease;
+}
+.footer-contact a:hover,
+.footer-contact span:hover { text-decoration-color: currentColor; }
 
 /* ========================================================
    Escala tipográfica — degraus FIXOS
