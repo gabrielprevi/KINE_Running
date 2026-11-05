@@ -1015,6 +1015,14 @@ h1, h2, h3, h4 {
   opacity: 0.3;
   cursor: not-allowed;
 }
+/* Descrição do produto: logo abaixo dos tamanhos, acima do botão. O espaço de cima
+   vem do margin-bottom do seletor anterior (.size-options). */
+.product-view__desc {
+  color: var(--ink-dim);
+  font-size: var(--text-body-sm);
+  line-height: var(--lh-body);
+  margin: 0 0 var(--space-4);
+}
 .product-view__add {
   margin-top: auto;
 }
@@ -1430,6 +1438,7 @@ h1, h2, h3, h4 {
   .product-view__price { margin: 6px 0 4px; }
   .product-view__label { margin-bottom: 6px; }
   .size-options { margin-bottom: 12px; }
+  .product-view__desc { margin-bottom: 16px; }
   .checkout-view__body { grid-template-columns: 1fr; }
 
   /* Checkout em tela cheia no celular, com os botões fixos embaixo. */

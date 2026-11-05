@@ -249,6 +249,7 @@ const productViewClose = document.getElementById('productViewClose');
 const productViewImage = document.getElementById('productViewImage');
 const productViewName = document.getElementById('productViewName');
 const productViewPrice = document.getElementById('productViewPrice');
+const productViewDesc = document.getElementById('productViewDesc');
 const productViewSoldout = document.getElementById('productViewSoldout');
 const productViewMedia = document.getElementById('productViewMedia');
 const galleryPrev = document.getElementById('galleryPrev');
@@ -336,6 +337,11 @@ function openProductView(card) {
 
   productViewName.textContent = currentProduct.name;
   productViewPrice.textContent = formatBRL(currentProduct.price);
+
+  // Descrição vem do data-description do cartão; sem texto, o parágrafo some.
+  const description = (card.dataset.description || '').trim();
+  productViewDesc.textContent = description;
+  productViewDesc.hidden = !description;
   productViewSoldout.hidden = !isSoldOut;
   productViewAdded.hidden = true;
 

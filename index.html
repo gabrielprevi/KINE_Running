@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png?v=4">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png?v=4">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3">
-<link rel="stylesheet" href="css/style.css?v=20261022d">
+<link rel="stylesheet" href="css/style.css?v=20261105a">
 </head>
 <body>
 
@@ -121,6 +121,8 @@
         <button type="button" class="size-btn" data-size="GG">GG</button>
       </div>
     </div>
+
+    <p class="product-view__desc" id="productViewDesc" hidden></p>
 
     <button class="btn btn--solid product-view__add" id="productViewAdd">ADICIONAR AO CARRINHO</button>
     <p class="product-view__added" id="productViewAdded" hidden>Adicionado ao carrinho ✓</p>
@@ -402,38 +404,38 @@
   <div class="product-grid">
 
     <div class="product-col product-col--left">
-      <article class="product-card" data-id="camiseta-dryfit" data-price="99.9" data-colors='[{"color":"Preto","images":["assets/products/camiseta-dryfit-preto-rosa-frente.webp","assets/products/camiseta-dryfit-preto-rosa-costas.webp"]}]' tabindex="0" role="button">
+      <article class="product-card" data-id="camiseta-dryfit" data-price="74.99" data-description="Confeccionada em 100% poliéster, com tecido microperfurado respirável que favorece a circulação de ar. Indicada para corrida, academia e atividades físicas." data-colors='[{"color":"Preto","images":["assets/products/camiseta-dryfit-preto-rosa-frente.webp","assets/products/camiseta-dryfit-preto-rosa-costas.webp"]}]' tabindex="0" role="button">
         <div class="product-media">
           <img class="product-photo" src="assets/products/camiseta-dryfit-preto-rosa-frente.webp" alt="Camiseta KINE CLUB preta, frente">
         </div>
         <h3>CAMISETA KINE CLUB</h3>
-        <p class="price">R$ 99,90</p>
+        <p class="price">R$ 74,99</p>
       </article>
 
-      <article class="product-card" data-id="shorts-esporte" data-price="179.9" data-colors='[{"color":"Preto","images":["assets/products/bermuda-kine-flag-frente.webp","assets/products/bermuda-kine-flag-costas.webp","assets/products/bermuda-kine-flag-modelo.webp","assets/products/bermuda-kine-flag-detalhes.webp"]}]' tabindex="0" role="button">
+      <article class="product-card" data-id="shorts-esporte" data-price="79.99" data-description="Camada externa em Dry Fit 100% poliéster e shorts interno em elanca 100% poliéster. Ideal para corridas e treinos." data-colors='[{"color":"Preto","images":["assets/products/bermuda-kine-flag-frente.webp","assets/products/bermuda-kine-flag-costas.webp","assets/products/bermuda-kine-flag-modelo.webp","assets/products/bermuda-kine-flag-detalhes.webp"]}]' tabindex="0" role="button">
         <div class="product-media">
           <img class="product-photo" src="assets/products/bermuda-kine-flag-frente.webp" alt="Shorts KINE RUNNING preto, frente">
         </div>
         <h3>SHORTS KINE RUNNING</h3>
-        <p class="price">R$ 179,90</p>
+        <p class="price">R$ 79,99</p>
       </article>
     </div>
 
     <div class="product-col product-col--right">
-      <article class="product-card" data-id="regata-world" data-price="129.9" data-colors='[{"color":"Preto","images":["assets/products/regata-world-frente.webp","assets/products/regata-world-costas.webp"]}]' tabindex="0" role="button">
+      <article class="product-card" data-id="regata-world" data-price="84.99" data-description="Regata em malhão de 240 g/m², modelagem oversized, caimento amplo e estilo esportivo urbano. Ideal para treinos e uso casual." data-colors='[{"color":"Preto","images":["assets/products/regata-world-frente.webp","assets/products/regata-world-costas.webp"]}]' tabindex="0" role="button">
         <div class="product-media">
           <img class="product-photo" src="assets/products/regata-world-frente.webp" alt="Regata KINE WORLD preta, frente">
         </div>
         <h3>REGATA KINE WORLD</h3>
-        <p class="price">R$ 129,90</p>
+        <p class="price">R$ 84,99</p>
       </article>
 
-      <article class="product-card" data-id="bone-running" data-price="199.9" data-colors='[{"color":"Preto","images":["assets/products/bone-running-preto-frente.jpg","assets/products/bone-running-preto-costas.jpg"]},{"color":"Verde","images":["assets/products/bone-running-verde-1-v2.jpg"]}]' tabindex="0" role="button">
+      <article class="product-card" data-id="bone-running" data-price="99.99" data-description="Boné esportivo em tecido técnico de poliamida, aba flexível em EVA e perfurações a laser para ventilação. Ideal para corrida e atividades esportivas." data-colors='[{"color":"Preto","images":["assets/products/bone-running-preto-frente.jpg","assets/products/bone-running-preto-costas.jpg"]},{"color":"Verde","images":["assets/products/bone-running-verde-1-v2.jpg"]}]' tabindex="0" role="button">
         <div class="product-media">
           <img class="product-photo" src="assets/products/bone-running-preto-frente.jpg" alt="Boné KINE RUNNING preto, frente">
         </div>
         <h3>BONÉ KINE RUNNING</h3>
-        <p class="price">R$ 199,90</p>
+        <p class="price">R$ 99,99</p>
       </article>
     </div>
 
@@ -478,38 +480,38 @@
   <div class="product-grid product-grid--wide">
 
     <div class="product-col product-col--left">
-      <article class="product-card" data-id="bone-kine-flag" data-price="150.9" data-colors='[{"color":"Preto","images":["assets/products/bone-kine-flag.webp"]}]' tabindex="0" role="button">
+      <article class="product-card" data-id="bone-kine-flag" data-price="99.99" data-description="Boné esportivo em tecido técnico de poliamida, aba flexível em EVA e perfurações a laser para ventilação. Ideal para corrida e atividades esportivas." data-colors='[{"color":"Preto","images":["assets/products/bone-kine-flag.webp"]}]' tabindex="0" role="button">
         <div class="product-media">
           <img class="product-photo" src="assets/products/bone-kine-flag.webp" alt="Boné KINE FLAG preto">
         </div>
         <h3>BONÉ KINE FLAG</h3>
-        <p class="price">R$ 150,90</p>
+        <p class="price">R$ 99,99</p>
       </article>
 
-      <article class="product-card" data-id="camiseta-kine-flag" data-price="179.9" data-colors='[{"color":"Preto","images":["assets/products/camiseta-kine-flag-frente.webp","assets/products/camiseta-kine-flag-costas.webp","assets/products/camiseta-kine-flag-modelo.webp"]}]' tabindex="0" role="button">
+      <article class="product-card" data-id="camiseta-kine-flag" data-price="74.99" data-description="Confeccionada em 100% poliéster, com tecido microperfurado respirável que favorece a circulação de ar. Indicada para corrida, academia e atividades físicas." data-colors='[{"color":"Preto","images":["assets/products/camiseta-kine-flag-frente.webp","assets/products/camiseta-kine-flag-costas.webp","assets/products/camiseta-kine-flag-modelo.webp"]}]' tabindex="0" role="button">
         <div class="product-media">
           <img class="product-photo" src="assets/products/camiseta-kine-flag-frente.webp" alt="Camiseta KINE FLAG preta, frente">
         </div>
         <h3>CAMISETA KINE FLAG</h3>
-        <p class="price">R$ 179,90</p>
+        <p class="price">R$ 74,99</p>
       </article>
     </div>
 
     <div class="product-col product-col--right">
-      <article class="product-card" data-id="camiseta-world" data-price="149.9" data-colors='[{"color":"Preto","images":["assets/products/camiseta-world-frente.webp","assets/products/camiseta-world-costas.webp"]}]' tabindex="0" role="button">
+      <article class="product-card" data-id="camiseta-world" data-price="74.99" data-description="Confeccionada em 100% poliéster, com tecido microperfurado respirável que favorece a circulação de ar. Indicada para corrida, academia e atividades físicas." data-colors='[{"color":"Preto","images":["assets/products/camiseta-world-frente.webp","assets/products/camiseta-world-costas.webp"]}]' tabindex="0" role="button">
         <div class="product-media">
           <img class="product-photo" src="assets/products/camiseta-world-frente.webp" alt="Camiseta KINE WORLD preta, frente">
         </div>
         <h3>CAMISETA KINE WORLD</h3>
-        <p class="price">R$ 149,90</p>
+        <p class="price">R$ 74,99</p>
       </article>
 
-      <article class="product-card" data-id="regata-kine-flag" data-price="99.9" data-colors='[{"color":"Preto","images":["assets/products/regata-kine-flag-frente.webp","assets/products/regata-kine-flag-costas.webp","assets/products/regata-kine-flag-modelo.webp"]}]' tabindex="0" role="button">
+      <article class="product-card" data-id="regata-kine-flag" data-price="84.99" data-description="Regata em malhão de 240 g/m², modelagem oversized, caimento amplo e estilo esportivo urbano. Ideal para treinos e uso casual." data-colors='[{"color":"Preto","images":["assets/products/regata-kine-flag-frente.webp","assets/products/regata-kine-flag-costas.webp","assets/products/regata-kine-flag-modelo.webp"]}]' tabindex="0" role="button">
         <div class="product-media">
           <img class="product-photo" src="assets/products/regata-kine-flag-frente.webp" alt="Regata KINE FLAG preta, frente">
         </div>
         <h3>REGATA KINE FLAG</h3>
-        <p class="price">R$ 99,90</p>
+        <p class="price">R$ 84,99</p>
       </article>
     </div>
 
@@ -563,7 +565,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="js/script.js?v=20261022a"></script>
+<script src="js/script.js?v=20261105a"></script>
 <script src="js/cinematic.js?v=20260917b"></script>
 </body>
 </html>
